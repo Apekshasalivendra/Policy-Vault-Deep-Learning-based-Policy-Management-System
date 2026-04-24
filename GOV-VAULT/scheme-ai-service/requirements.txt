@@ -1,0 +1,13 @@
+# GOV-VAULT Scheme AI Service — minimal requirements
+# (Scheme Saathi's pip env may already have these; this ensures clean isolated install)
+fastapi==0.115.9
+uvicorn[standard]==0.34.2
+pydantic==2.11.4
+pinecone==7.0.2
+langchain-groq==0.3.2
+langchain==0.3.25
+langchain-core==0.3.63
+sentence-transformers==4.1.0
+torch==2.7.0
+python-dotenv==1.1.0
+pandas==2.3.0

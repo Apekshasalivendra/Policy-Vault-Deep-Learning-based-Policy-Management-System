@@ -1,0 +1,123 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: govvault_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-govvault_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-govvault_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-govvaultdb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-govvault_user} -d ${POSTGRES_DB:-govvaultdb}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Scheme AI Service ────────────────────────────────────────────────────────
+  scheme-ai-service:
+    build:
+      context: ./scheme-ai-service
+      dockerfile: Dockerfile
+    container_name: govvault_ai
+    restart: unless-stopped
+    environment:
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_HOST: ${PINECONE_HOST}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      SCHEME_SAATHI_PATH: /scheme_saathi
+      DB_PATH: /scheme_saathi/new_schemes.db
+    volumes:
+      # Mount Scheme_Saathi directory as read-only inside the container
+      - type: bind
+        source: ${SCHEME_SAATHI_DIR:-../Scheme_Saathi}
+        target: /scheme_saathi
+        read_only: true
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s # SentenceTransformer warmup takes ~10-15s
+
+  # ── Entitlement Service (Phase 1) ───────────────────────────────────────────
+  entitlement-service:
+    build: ./entitlement-service
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4000/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-govvault_user}:${POSTGRES_PASSWORD:-govvault_pass}@postgres:5432/${POSTGRES_DB:-govvaultdb}?schema=entitlement&connection_limit=10
+
+  # ── Backend ─────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: govvault_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      scheme-ai-service:
+        condition: service_healthy # wait until AI warmup passes healthcheck
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-govvault_user}:${POSTGRES_PASSWORD:-govvault_pass}@postgres:5432/govvault_backend?connection_limit=10
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3001}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      # Internal Docker DNS — http://scheme-ai-service:8000 (NOT localhost)
+      AI_SERVICE_URL: http://scheme-ai-service:8000
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Frontend ─────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the Next.js static build at build time
+        NEXT_PUBLIC_API_URL: http://localhost:3000
+    container_name: govvault_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      # Runtime override — browser talks directly to host-mapped backend port
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    ports:
+      - "3001:3001"
+
+volumes:
+  postgres_data:
+
+

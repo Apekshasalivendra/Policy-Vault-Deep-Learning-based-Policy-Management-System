@@ -1,0 +1,490 @@
+{
+    "info": {
+        "_postman_id": "gov-vault-phase3",
+        "name": "GOV-VAULT API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": "GOV-VAULT Phase 1 + Phase 2 + Phase 3 API. Set base_url = http://localhost:3000 in your environment."
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000"
+        },
+        {
+            "key": "userJwt",
+            "value": ""
+        },
+        {
+            "key": "adminJwt",
+            "value": ""
+        },
+        {
+            "key": "verificationToken",
+            "value": ""
+        },
+        {
+            "key": "familyId",
+            "value": ""
+        },
+        {
+            "key": "memberId",
+            "value": ""
+        },
+        {
+            "key": "claimId",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/health"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/auth/register",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"newuser@govvault.in\",\n  \"password\": \"User@1234\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Login (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.token) pm.collectionVariables.set('userJwt', res.token);"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/auth/login",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"aarav.sharma@govvault.in\",\n  \"password\": \"User@1234\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Login (Admin)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.token) pm.collectionVariables.set('adminJwt', res.token);"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/auth/login",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@govvault.in\",\n  \"password\": \"Admin@123\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Me",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/auth/me",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Mock Government Verification",
+            "item": [
+                {
+                    "name": "1. Initiate Aadhaar Verification",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/mock/verify-aadhaar",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"aadhaar\": \"123412341234\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "2. Confirm Aadhaar OTP",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.verificationToken) pm.collectionVariables.set('verificationToken', res.verificationToken);"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/mock/confirm-aadhaar",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"aadhaar\": \"123412341234\",\n  \"otp\": \"PASTE_OTP_FROM_PREVIOUS_RESPONSE\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "3. Verify PAN",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/mock/verify-pan",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"pan\": \"ABCDE1234F\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Family Registration",
+            "item": [
+                {
+                    "name": "Create Family",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.family && res.family.id) pm.collectionVariables.set('familyId', res.family.id);"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/family/create",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"aadhaarVerificationToken\": \"{{verificationToken}}\",\n  \"members\": [\n    {\n      \"name\": \"Aarav Sharma\",\n      \"phone\": \"9876543210\",\n      \"aadhaar\": \"123412341234\",\n      \"pan\": \"ABCDE1234F\",\n      \"incomeRange\": \"0-2.5L\",\n      \"occupation\": \"Farmer\",\n      \"age\": 35\n    },\n    {\n      \"name\": \"Sneha Sharma\",\n      \"phone\": \"9876543211\",\n      \"aadhaar\": \"432143214321\",\n      \"incomeRange\": \"0-2.5L\",\n      \"occupation\": \"Homemaker\",\n      \"age\": 30\n    }\n  ]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Family by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/family/{{familyId}}",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Fraud Check — Duplicate Aadhaar (expect 409)",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/family/create",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"aadhaarVerificationToken\": \"{{verificationToken}}\",\n  \"members\": [\n    {\n      \"name\": \"Raju Fake\",\n      \"phone\": \"9999999999\",\n      \"aadhaar\": \"123412341234\",\n      \"incomeRange\": \"2.5-5L\",\n      \"occupation\": \"Trader\",\n      \"age\": 40\n    }\n  ]\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "User Dashboard (Phase 3)",
+            "item": [
+                {
+                    "name": "Get My Family (decrypted Aadhaar+PAN)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.family && res.family.members && res.family.members[0]) pm.collectionVariables.set('memberId', res.family.members[0].id);"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/family/my",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Get My Claims",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/claim/my",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Claims (Phase 3)",
+            "item": [
+                {
+                    "name": "Initiate Claim (family must be APPROVED first)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.claim && res.claim.id) pm.collectionVariables.set('claimId', res.claim.id);"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/claim/initiate",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"schemeId\": \"PM_KISAN_001\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Initiate Claim — Duplicate (expect 409)",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/claim/initiate",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{userJwt}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"schemeId\": \"PM_KISAN_001\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Admin (Phase 2 + 3)",
+            "item": [
+                {
+                    "name": "Admin Dashboard Metrics",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin/dashboard",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "List Pending Families",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin/families/pending",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "List All Families",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin/families",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Approve Family",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/admin/family/{{familyId}}/approve",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Reject Family",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/admin/family/{{familyId}}/reject",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "List Pending Claims",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin/claims/pending",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Approve Claim",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/admin/claim/{{claimId}}/approve",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Reject Claim",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/admin/claim/{{claimId}}/reject",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminJwt}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

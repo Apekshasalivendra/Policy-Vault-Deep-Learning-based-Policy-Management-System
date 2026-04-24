@@ -1,0 +1,209 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// ENUMS
+// ----------------------------------------------------------------------------
+
+enum PolicyType {
+  INSURANCE
+  PENSION
+  SUBSIDY
+  COMPENSATION
+}
+
+enum PolicyStatus {
+  ACTIVE
+  MATURED
+  CLAIMED
+  DECEASED_PENDING    // @deprecated — kept for backward compat with older records
+  DEATH_REPORTED
+  DEATH_VERIFIED
+  CLAIM_ELIGIBLE
+  CLAIM_IN_PROGRESS
+  CLAIM_SETTLED
+}
+
+enum NomineeStatus {
+  ALIVE
+  DECEASED
+}
+
+enum DocumentType {
+  DEATH_CERTIFICATE
+  ID_PROOF
+  BANK_PROOF
+  AFFIDAVIT
+}
+
+enum ClaimType {
+  NOMINEE
+  LEGAL_HEIR_REQUIRED
+}
+
+enum ClaimStatus {
+  INITIATED
+  DOCUMENTS_PENDING
+  PRE_VERIFIED
+  SUBMITTED
+  UNDER_ADMIN_REVIEW
+  APPROVED
+  REJECTED
+  SETTLED
+}
+
+enum PreVerifyStatus {
+  CLEAN
+  FLAGGED
+}
+
+enum DeathReportStatus {
+  REPORTED
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+// ----------------------------------------------------------------------------
+// MODELS
+// ----------------------------------------------------------------------------
+
+model PolicyRegistry {
+  id               String       @id @default(uuid())
+  memberId         String // logical reference to FamilyMember
+  policyType       PolicyType
+  issuingAuthority String
+  policyName       String?      // human-readable name (e.g. "LIC Life Insurance")
+  status           PolicyStatus @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+
+  nominees         Nominee[]
+  structuredClaims StructuredClaim[]
+  deathReports     DeathReport[]
+}
+
+model Nominee {
+  id              String         @id @default(uuid())
+  policyId        String
+  policy          PolicyRegistry @relation(fields: [policyId], references: [id])
+  nomineeName     String
+  nomineeRelation String
+  nomineeStatus   NomineeStatus  @default(ALIVE)
+}
+
+model LegalHeir {
+  id           String  @id @default(uuid())
+  memberId     String // logical reference to FamilyMember
+  heirName     String
+  heirRelation String
+  verified     Boolean @default(false)
+}
+
+model ClaimDocument {
+  id           String          @id @default(uuid())
+  claimId      String
+  claim        StructuredClaim @relation(fields: [claimId], references: [id])
+  documentType DocumentType
+  filePath     String
+  uploadedAt   DateTime        @default(now())
+}
+
+model ClaimTimeline {
+  id        String          @id @default(uuid())
+  claimId   String
+  claim     StructuredClaim @relation(fields: [claimId], references: [id])
+  status    ClaimStatus
+  sequence  Int
+  note      String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @default(now()) @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model StructuredClaim {
+  id              String           @id @default(uuid())
+  memberId        String
+  policyId        String
+  policy          PolicyRegistry   @relation(fields: [policyId], references: [id])
+  claimantName    String
+  claimType       ClaimType
+  status          ClaimStatus
+  preVerifyResult PreVerifyStatus?
+  isClosed        Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  documents ClaimDocument[]
+  timeline  ClaimTimeline[]
+  eventLogs ClaimEventLog[]
+
+  @@index([memberId, policyId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MemberStatus {
+  id         String   @id @default(uuid())
+  memberId   String   @unique
+  isDeceased Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+}
+
+model DeathReport {
+  id               String            @id @default(uuid())
+  memberId         String
+  policyId         String
+  reportedByUserId String
+  evidencePath     String?           // placeholder for future death certificate upload
+  status           DeathReportStatus @default(REPORTED)
+  notes            String?
+  reportedAt       DateTime          @default(now())
+  verifiedAt       DateTime?
+
+  policy   PolicyRegistry @relation(fields: [policyId], references: [id])
+
+  @@index([memberId])
+  @@index([policyId])
+  @@index([status])
+}
+
+enum ClaimAction {
+  STARTED
+  DOCUMENT_UPLOADED
+  PRE_VERIFIED
+  SUBMITTED
+  MOVED_TO_REVIEW
+  APPROVED
+  REJECTED
+  SETTLED
+}
+
+// ── Forensic Audit Log ───────────────────────────────────────────────────────
+// Append-only log. Deletes are restricted to ensure permanent traceability.
+model ClaimEventLog {
+  id              String          @id @default(uuid())
+  claimId         String
+  claim           StructuredClaim @relation(fields: [claimId], references: [id], onDelete: Restrict)
+  action          ClaimAction
+  previousStatus  ClaimStatus? // Nullable for the very first creation event
+  newStatus       ClaimStatus
+  performedById   String
+  performedByRole String
+  ipAddress       String?
+  userAgent       String?
+  correlationId   String?
+  createdAt       DateTime        @default(now())
+
+  @@index([claimId])
+  @@index([newStatus])
+  @@index([createdAt])
+}
