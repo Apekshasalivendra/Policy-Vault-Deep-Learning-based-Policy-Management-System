@@ -1,78 +1,31 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
-import * as emailService from '../services/email.service';
-import jwt from 'jsonwebtoken';
-
-// ── POST /auth/send-verification-email ────────────────────────────────────────
-export const sendVerificationEmail = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email } = req.body;
-        if (!email) {
-            res.status(400).json({ error: 'Email is required' });
-            return;
-        }
-
-        // Check if user already exists
-        const existingUser = await authService.getUserByEmail(email);
-        if (existingUser) {
-            res.status(400).json({ error: 'Email is already registered' });
-            return;
-        }
-
-        await emailService.sendOtpEmail(email);
-        res.json({ message: 'OTP sent successfully to ' + email });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to send verification email' });
-    }
-};
-
-// ── POST /auth/verify-email ───────────────────────────────────────────────────
-export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email, otp } = req.body;
-        if (!email || !otp) {
-            res.status(400).json({ error: 'Email and OTP are required' });
-            return;
-        }
-
-        const isValid = emailService.verifyOtp(email, otp);
-        if (!isValid) {
-            res.status(400).json({ error: 'Invalid or expired OTP' });
-            return;
-        }
-
-        // Generate a temporary token to prove email verification during registration
-        const verificationToken = jwt.sign(
-            { email, verified: true },
-            process.env.JWT_SECRET as string,
-            { expiresIn: '15m' }
-        );
-
-        res.json({ message: 'Email verified successfully', verificationToken });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to verify OTP' });
-    }
-};
 
 // ── POST /auth/register ───────────────────────────────────────────────────────
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { email, password, verificationToken } = req.body;
+        const { email, password } = req.body;
 
-        if (!email || !password || !verificationToken) {
-            res.status(400).json({ error: 'email, password, and verificationToken are required' });
+        if (!email || !password) {
+            res.status(400).json({ error: 'Email and password are required' });
             return;
         }
 
-        // Verify the email verification token
-        try {
-            const decoded = jwt.verify(verificationToken, process.env.JWT_SECRET as string) as { email: string, verified: boolean };
-            if (decoded.email !== email || !decoded.verified) {
-                throw new Error('Invalid token');
-            }
-        } catch (e) {
-            res.status(401).json({ error: 'Invalid or expired verification token. Please verify your email again.' });
+        // Password strength enforcement on backend
+        if (password.length < 8) {
+            res.status(400).json({ error: 'Password must be at least 8 characters' });
+            return;
+        }
+        if (!/[A-Z]/.test(password)) {
+            res.status(400).json({ error: 'Password must contain at least one uppercase letter' });
+            return;
+        }
+        if (!/[0-9]/.test(password)) {
+            res.status(400).json({ error: 'Password must contain at least one number' });
+            return;
+        }
+        if (!/[^A-Za-z0-9]/.test(password)) {
+            res.status(400).json({ error: 'Password must contain at least one special character' });
             return;
         }
 
@@ -90,7 +43,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            res.status(400).json({ error: 'email and password are required' });
+            res.status(400).json({ error: 'Email and password are required' });
             return;
         }
 

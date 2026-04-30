@@ -36,12 +36,8 @@ api.interceptors.response.use(
 export const authApi = {
     login: (email: string, password: string) =>
         api.post<{ token: string }>('/auth/login', { email, password }),
-    sendVerificationEmail: (email: string) =>
-        api.post('/auth/send-verification-email', { email }),
-    verifyEmail: (email: string, otp: string) =>
-        api.post<{ verificationToken: string }>('/auth/verify-email', { email, otp }),
-    register: (email: string, password: string, verificationToken: string) =>
-        api.post('/auth/register', { email, password, verificationToken }),
+    register: (email: string, password: string) =>
+        api.post('/auth/register', { email, password }),
     me: () => api.get('/auth/me'),
 };
 
