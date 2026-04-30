@@ -9,6 +9,7 @@ import {
 import { mockApi } from '@/lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────────────
+export interface MemberData {
     nameAsInAadhaar: string;
     phoneAsInAadhaar: string;
     aadhaar: string;
