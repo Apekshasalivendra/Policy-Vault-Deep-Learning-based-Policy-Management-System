@@ -17,7 +17,7 @@ from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-SCHEME_SAATHI_PATH = os.getenv("SCHEME_SAATHI_PATH", os.path.join(os.path.dirname(__file__), "Scheme_Saathi"))
+SCHEME_SAATHI_PATH = os.getenv("SCHEME_SAATHI_PATH", r"D:\capstone\Scheme_Saathi")
 PINECONE_HOST = os.getenv("PINECONE_HOST", "")
 if not PINECONE_HOST:
     raise EnvironmentError("PINECONE_HOST env var is required")
