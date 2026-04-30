@@ -4,9 +4,11 @@ import * as familyService from '../services/family.service';
 // ── POST /family/create ───────────────────────────────────────────────────────
 export const createFamily = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { members, aadhaarVerificationToken } = req.body as {
+        const { members, aadhaarVerificationToken, state, category } = req.body as {
             members?: unknown[];
             aadhaarVerificationToken?: string;
+            state?: string;
+            category?: string;
         };
 
         if (!aadhaarVerificationToken) {
@@ -22,7 +24,13 @@ export const createFamily = async (req: Request, res: Response): Promise<void> =
         }
 
         const userId = req.user!.userId;
-        const family = await familyService.createFamily(userId, members as never, aadhaarVerificationToken);
+        const family = await familyService.createFamily(
+            userId,
+            members as never,
+            aadhaarVerificationToken,
+            state,
+            category
+        );
 
         res.status(201).json({ message: 'Family registered successfully', family });
     } catch (err) {

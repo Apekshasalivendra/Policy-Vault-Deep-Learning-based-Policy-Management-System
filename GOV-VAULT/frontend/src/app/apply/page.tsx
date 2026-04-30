@@ -21,6 +21,8 @@ function ApplyContent() {
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
     const [success, setSuccess] = useState<SuccessData | null>(null);
+    const [state, setState] = useState('Andhra Pradesh');
+    const [category, setCategory] = useState('General');
 
     // ── Member management ────────────────────────────────────────────────────────
     const addMember = () => {
@@ -37,7 +39,7 @@ function ApplyContent() {
     // ── Validation ───────────────────────────────────────────────────────────────
     const headVerified = members[0]?.aadhaarStatus === 'verified';
     const allRequired = members.every((m) =>
-        m.data.name && m.data.phone && m.data.aadhaar && m.data.incomeRange && m.data.occupation && m.data.age
+        m.data.nameAsInAadhaar && m.data.phoneAsInAadhaar && m.data.aadhaar && m.data.incomeRange && m.data.occupation && m.data.age
     );
     const canSubmit = headVerified && allRequired && !submitting;
 
@@ -50,16 +52,19 @@ function ApplyContent() {
 
         try {
             const payload = members.map((m) => ({
-                name: m.data.name.trim(),
-                phone: m.data.phone.trim(),
+                nameAsInAadhaar: m.data.nameAsInAadhaar.trim(),
+                phoneAsInAadhaar: m.data.phoneAsInAadhaar.trim(),
                 aadhaar: m.data.aadhaar.trim(),
                 pan: m.data.pan.trim() || undefined,
                 incomeRange: m.data.incomeRange,
                 occupation: m.data.occupation.trim(),
                 age: Number(m.data.age),
+                gender: m.data.gender,
+                religion: m.data.religion,
+                physicallyDisabled: m.data.physicallyDisabled,
             }));
 
-            const res = await familyApi.create(payload, members[0].verificationToken);
+            const res = await familyApi.create(payload, members[0].verificationToken, state, category);
             const { temporaryFamilyId, status } = res.data.family;
             setSuccess({ temporaryFamilyId, status });
 
@@ -149,6 +154,61 @@ function ApplyContent() {
                             The first member (Head of Family) must have their Aadhaar verified to submit.
                         </p>
                     )}
+                </div>
+
+                {/* State & Category Selection */}
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                        <label className="mb-1.5 block text-xs font-medium text-slate-400">Current State *</label>
+                        <select 
+                            value={state} 
+                            onChange={(e) => setState(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                        >
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Chhattisgarh">Chhattisgarh</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Jharkhand">Jharkhand</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Manipur">Manipur</option>
+                            <option value="Meghalaya">Meghalaya</option>
+                            <option value="Mizoram">Mizoram</option>
+                            <option value="Nagaland">Nagaland</option>
+                            <option value="Odisha">Odisha</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Sikkim">Sikkim</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Tripura">Tripura</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                        </select>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                        <label className="mb-1.5 block text-xs font-medium text-slate-400">Caste Category *</label>
+                        <select 
+                            value={category} 
+                            onChange={(e) => setCategory(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                        >
+                            <option value="General">General</option>
+                            <option value="OBC">OBC</option>
+                            <option value="SC">SC</option>
+                            <option value="ST">ST</option>
+                            <option value="EWS">EWS</option>
+                        </select>
+                    </div>
                 </div>
             </motion.div>
 

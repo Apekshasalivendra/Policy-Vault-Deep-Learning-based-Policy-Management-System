@@ -36,6 +36,13 @@ interface AdminClaimDetails {
     isClosed: boolean;
     createdAt: string;
     updatedAt: string;
+    isIdentityVerified: boolean;
+    isBankVerified: boolean;
+    isDeathVerified: boolean | null;
+    isRelationshipVerified: boolean | null;
+    bankVerificationMethod: string | null;
+    razorpayReferenceId: string | null;
+    claimantRole: string;
     policy: {
         policyType: string;
         issuingAuthority: string;
@@ -145,21 +152,21 @@ function AdminClaimDetailsContent({ claimId }: { claimId: string }) {
             </motion.div>
 
             <div className="grid gap-6 lg:grid-cols-3">
-                {/* ── Left Column: Verification Identity & Documents ── */}
+                {/* ── Left Column: Verification Checklist ── */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Identity Block */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-5">
-                            <User className="h-4 w-4 text-[var(--gov-blue)]" /> Claimant Identity
+                            <User className="h-4 w-4 text-[var(--gov-blue)]" /> Claim Details
                         </h2>
-                        <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                        <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Claimant Name</p>
                                 <p className="text-sm text-slate-900 font-bold">{claim.claimantName}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Filing Category</p>
-                                <p className="text-sm text-slate-900 font-bold">{claim.claimType.replace(/_/g, ' ')}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Claimant Role</p>
+                                <p className="text-sm text-slate-900 font-bold">{claim.claimantRole}</p>
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Target Policy</p>
@@ -171,16 +178,65 @@ function AdminClaimDetailsContent({ claimId }: { claimId: string }) {
                             </div>
                         </div>
 
-                        {/* Pre-Verify Trust Score Indicator */}
-                        <div className={`mt-6 p-4 rounded-xl border shadow-sm ${isClean ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
-                            <div className="flex items-center gap-3">
-                                {isClean ? <CheckCircle className="h-5 w-5 text-emerald-600" /> : <ShieldAlert className="h-5 w-5 text-red-500" />}
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900">Engine Pre-Verification Score</p>
-                                    <p className={`text-xs font-medium mt-0.5 ${isClean ? 'text-emerald-700' : 'text-red-700'}`}>
-                                        {isClean ? 'CLEAN: Automated Identity Match Confirmed' : 'FLAGGED: Manual Review Recommended'}
-                                    </p>
+                        {/* Strict Verification Checklist */}
+                        <div className="border-t border-slate-100 pt-6">
+                            <h3 className="text-sm font-bold text-slate-900 mb-4">Verification Checklist</h3>
+                            <div className="space-y-3">
+                                {/* Identity */}
+                                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50">
+                                    <div className="flex items-center gap-3">
+                                        {claim.isIdentityVerified ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <XCircle className="h-5 w-5 text-red-400" />}
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900">Identity Verified</p>
+                                            <p className="text-xs text-slate-500">Aadhaar e-KYC Match</p>
+                                        </div>
+                                    </div>
+                                    {!claim.isIdentityVerified && <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-sm border border-indigo-200 font-bold">Verify API</button>}
                                 </div>
+
+                                {/* Bank / Razorpay */}
+                                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50">
+                                    <div className="flex items-center gap-3">
+                                        {claim.isBankVerified ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <Clock className="h-5 w-5 text-amber-500" />}
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900">Bank Account Verified</p>
+                                            <p className="text-xs text-slate-500">
+                                                {claim.bankVerificationMethod === 'RAZORPAY_AUTOMATED' 
+                                                    ? `Razorpay Automated (Ref: ${claim.razorpayReferenceId})`
+                                                    : claim.bankVerificationMethod === 'MANUAL_DOCUMENT' ? 'Manual Passbook Upload' : 'Pending'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {!claim.isBankVerified && <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-sm border border-indigo-200 font-bold">Manual Approve</button>}
+                                </div>
+
+                                {/* Death Certificate (If applicable) */}
+                                {claim.isDeathVerified !== null && (
+                                    <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50">
+                                        <div className="flex items-center gap-3">
+                                            {claim.isDeathVerified ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <Clock className="h-5 w-5 text-amber-500" />}
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-900">Death Certificate Verified</p>
+                                                <p className="text-xs text-slate-500">CRS Integration</p>
+                                            </div>
+                                        </div>
+                                        {!claim.isDeathVerified && <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-sm border border-indigo-200 font-bold">Verify CRS API</button>}
+                                    </div>
+                                )}
+
+                                {/* Relationship/Legal Heir (If applicable) */}
+                                {claim.isRelationshipVerified !== null && (
+                                    <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50">
+                                        <div className="flex items-center gap-3">
+                                            {claim.isRelationshipVerified ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-900">Relationship/Heir Verified</p>
+                                                <p className="text-xs text-slate-500">Legal Heir / Guardian Certificate</p>
+                                            </div>
+                                        </div>
+                                        {!claim.isRelationshipVerified && <button className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-sm border border-red-200 font-bold">Review Docs</button>}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -188,10 +244,10 @@ function AdminClaimDetailsContent({ claimId }: { claimId: string }) {
                     {/* Documents Block */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-5">
-                            <FileText className="h-4 w-4 text-[var(--gov-blue)]" /> Uploaded Evidence
+                            <FileText className="h-4 w-4 text-[var(--gov-blue)]" /> Attached Evidence
                         </h2>
                         {claim.documents.length === 0 ? (
-                            <p className="text-sm font-medium text-slate-500 italic">No documents attached.</p>
+                            <p className="text-sm font-medium text-slate-500 italic">No manual documents uploaded.</p>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
                                 {claim.documents.map(doc => (
@@ -216,7 +272,7 @@ function AdminClaimDetailsContent({ claimId }: { claimId: string }) {
                     <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-6 shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-[var(--gov-blue)]" />
                         <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-5 mt-1">
-                            <ShieldAlert className="h-4 w-4 text-indigo-600" /> Governance Actions
+                            <ShieldAlert className="h-4 w-4 text-indigo-600" /> Final Decision
                         </h2>
 
                         {isClosed ? (
@@ -226,57 +282,58 @@ function AdminClaimDetailsContent({ claimId }: { claimId: string }) {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                <AnimatePresence mode="popLayout">
-                                    {status === 'SUBMITTED' && (
-                                        <motion.button
-                                            key="review"
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            onClick={() => handleAction(entitlementApi.adminReview, 'Review')}
+                                {/* Only allow approval if core verifications are complete */}
+                                {status === 'UNDER_ADMIN_REVIEW' && (
+                                    <motion.div key="review-actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => handleAction(entitlementApi.adminReject, 'Reject')}
                                             disabled={actionLoading}
-                                            className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-sm bg-[var(--gov-blue)] text-sm font-bold text-white shadow-sm hover:brightness-110 transition-all disabled:opacity-50"
+                                            className="w-full flex justify-center items-center gap-2 py-2.5 px-3 rounded-sm bg-white border border-red-200 hover:border-red-300 hover:bg-red-50 text-sm font-bold text-red-600 transition-all disabled:opacity-50 shadow-sm"
                                         >
-                                            {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                            Pull to "Under Review"
-                                        </motion.button>
-                                    )}
-
-                                    {status === 'UNDER_ADMIN_REVIEW' && (
-                                        <motion.div key="review-actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-3">
-                                            <button
-                                                onClick={() => handleAction(entitlementApi.adminReject, 'Reject')}
-                                                disabled={actionLoading}
-                                                className="w-full flex justify-center items-center gap-2 py-2.5 px-3 rounded-sm bg-white border border-red-200 hover:border-red-300 hover:bg-red-50 text-sm font-bold text-red-600 transition-all disabled:opacity-50 shadow-sm"
-                                            >
-                                                <XCircle className="h-4 w-4" /> Reject
-                                            </button>
-                                            <button
-                                                onClick={() => handleAction(entitlementApi.adminApprove, 'Approve')}
-                                                disabled={actionLoading}
-                                                className="w-full flex justify-center items-center gap-2 py-2.5 px-3 rounded-sm bg-emerald-600 hover:bg-emerald-500 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-50"
-                                            >
-                                                <CheckCircle className="h-4 w-4" /> Approve
-                                            </button>
-                                        </motion.div>
-                                    )}
-
-                                    {status === 'APPROVED' && (
-                                        <motion.button
-                                            key="settle"
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            onClick={() => handleAction(entitlementApi.adminSettle, 'Settle')}
-                                            disabled={actionLoading}
-                                            className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-sm bg-[var(--gov-gold)] hover:brightness-110 text-sm font-bold text-[var(--gov-blue)] shadow-sm transition-all disabled:opacity-50"
+                                            <XCircle className="h-4 w-4" /> Reject
+                                        </button>
+                                        <button
+                                            onClick={() => handleAction(entitlementApi.adminApprove, 'Approve')}
+                                            disabled={actionLoading || !claim.isBankVerified || !claim.isIdentityVerified || claim.isRelationshipVerified === false}
+                                            className="w-full flex justify-center items-center gap-2 py-2.5 px-3 rounded-sm bg-emerald-600 hover:bg-emerald-500 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-50"
                                         >
-                                            {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                                            Issue Settlement
-                                        </motion.button>
-                                    )}
-                                </AnimatePresence>
-                                <p className="text-[10px] font-medium text-slate-500 text-center mt-3">State transitions are cryptographically appended to the timeline and are immutable once triggered.</p>
+                                            <CheckCircle className="h-4 w-4" /> Approve
+                                        </button>
+                                    </motion.div>
+                                )}
+
+                                {status === 'APPROVED' && (
+                                    <motion.button
+                                        key="settle"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        onClick={() => handleAction(entitlementApi.adminSettle, 'Settle')}
+                                        disabled={actionLoading}
+                                        className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-sm bg-[var(--gov-gold)] hover:brightness-110 text-sm font-bold text-[var(--gov-blue)] shadow-sm transition-all disabled:opacity-50"
+                                    >
+                                        {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                                        Issue Settlement
+                                    </motion.button>
+                                )}
+                                
+                                {status === 'SUBMITTED' && (
+                                    <motion.button
+                                        key="review"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        onClick={() => handleAction(entitlementApi.adminReview, 'Review')}
+                                        disabled={actionLoading}
+                                        className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-sm bg-[var(--gov-blue)] text-sm font-bold text-white shadow-sm hover:brightness-110 transition-all disabled:opacity-50"
+                                    >
+                                        {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                        Pull to "Under Review"
+                                    </motion.button>
+                                )}
                             </div>
                         )}
+                        <p className="text-[10px] font-medium text-slate-500 text-center mt-4">
+                            Approval requires Identity and Bank Verification to be fully cleared.
+                        </p>
                     </div>
 
                     {/* Timeline Feed */}

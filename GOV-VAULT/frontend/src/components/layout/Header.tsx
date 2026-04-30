@@ -46,7 +46,7 @@ export default function Header() {
                             <NavLink href="/apply" icon={<Users className="h-4 w-4" />} label="Apply" />
                             <NavLink href="/recommendations" icon={<Sparkles className="h-4 w-4" />} label="Schemes" />
                             <NavLink href="/dashboard/policies" icon={<Shield className="h-4 w-4" />} label="Policies" />
-                            <NavLink href="/dashboard/claims" icon={<FileText className="h-4 w-4" />} label="Claims" />
+                            <NavLink href="/claims" icon={<FileText className="h-4 w-4" />} label="Claims" />
                         </>
                     )}
 

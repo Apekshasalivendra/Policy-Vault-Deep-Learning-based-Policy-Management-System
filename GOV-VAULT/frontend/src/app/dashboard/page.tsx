@@ -213,6 +213,8 @@ function DashboardContent() {
                 )}
             </Section>
 
+            {isApproved ? (
+                <>
             {/* ── MEMBERS TABLE ────────────────────────────────────────────────────── */}
             {family && (
                 <Section icon={<ShieldCheck className="h-5 w-5" />} title="Registered Members">
@@ -391,10 +393,26 @@ function DashboardContent() {
                             <Sparkles className="h-4 w-4" />
                             Discover Best Schemes
                         </div>
-                        {isApproved && <ChevronRight className="h-4 w-4 hidden sm:block" />}
                     </button>
                 </div>
             </Section>
+            </>
+            ) : family ? (
+                <div className="flex flex-col items-center justify-center gap-4 py-16 text-center rounded-xl border border-amber-200 bg-amber-50 p-8 shadow-sm">
+                    <div className="rounded-full bg-amber-100 p-4 shadow-sm border border-amber-200">
+                        <Clock className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <h2 className="text-xl font-bold text-amber-900">Registration Under Review</h2>
+                    <p className="text-sm font-medium text-amber-700 max-w-md">
+                        Your family registration is currently pending admin approval. You will gain access to member details, scheme claims, and policy vault features once approved. 
+                    </p>
+                    {family.status === 'REJECTED' && (
+                        <p className="mt-2 rounded-md bg-red-100 px-4 py-2 text-xs font-bold text-red-700">
+                            Status: REJECTED. Please contact administration.
+                        </p>
+                    )}
+                </div>
+            ) : null}
         </div>
     );
 }

@@ -17,9 +17,21 @@ interface PendingFamily {
     createdAt: string;
     createdBy: { id: string; email: string };
     _count: { members: number };
+    members: {
+        id: string;
+        nameAsInAadhaar: string;
+        phoneAsInAadhaar: string;
+        age: number;
+        gender: string;
+        religion: string;
+        physicallyDisabled: boolean;
+        occupation: string;
+        incomeRange: string;
+        isAadhaarVerified: boolean;
+    }[];
 }
 
-type ActionState = { id: string; type: 'approving' | 'rejecting' } | null;
+type ActionState = { id: string; type: 'approving' | 'rejecting' | 'requesting_docs' } | null;
 type Toast = { id: string; kind: 'success' | 'error'; message: string } | null;
 
 function AdminFamiliesContent() {
@@ -28,6 +40,11 @@ function AdminFamiliesContent() {
     const [error, setError] = useState('');
     const [action, setAction] = useState<ActionState>(null);
     const [toast, setToast] = useState<Toast>(null);
+    const [expandedFamilyId, setExpandedFamilyId] = useState<string | null>(null);
+
+    const toggleExpand = (id: string) => {
+        setExpandedFamilyId((prev) => (prev === id ? null : id));
+    };
 
     const showToast = (kind: 'success' | 'error', message: string) => {
         const id = Math.random().toString();
@@ -48,18 +65,21 @@ function AdminFamiliesContent() {
 
     useEffect(() => { loadFamilies(); }, [loadFamilies]);
 
-    const handleAction = async (familyId: string, type: 'approving' | 'rejecting') => {
+    const handleAction = async (familyId: string, type: 'approving' | 'rejecting' | 'requesting_docs') => {
         setAction({ id: familyId, type });
         try {
             if (type === 'approving') {
                 await adminApi.approveFamily(familyId);
                 showToast('success', 'Family approved successfully.');
-            } else {
+                setFamilies((prev) => prev.filter((f) => f.id !== familyId));
+            } else if (type === 'rejecting') {
                 await adminApi.rejectFamily(familyId);
                 showToast('success', 'Family rejected.');
+                setFamilies((prev) => prev.filter((f) => f.id !== familyId));
+            } else if (type === 'requesting_docs') {
+                await adminApi.requestDocs(familyId);
+                showToast('success', 'Document request email sent to the user.');
             }
-            // Optimistic remove from list
-            setFamilies((prev) => prev.filter((f) => f.id !== familyId));
         } catch (err) {
             const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
             showToast('error', msg ?? 'Action failed. Please try again.');
@@ -159,6 +179,7 @@ function AdminFamiliesContent() {
                                 {families.map((f) => {
                                     const isActing = action?.id === f.id;
                                     return (
+                                        <>
                                         <motion.tr
                                             key={f.id}
                                             exit={{ opacity: 0, height: 0 }}
@@ -192,30 +213,75 @@ function AdminFamiliesContent() {
 
                                             {/* Actions */}
                                             <td className="px-4 py-5">
-                                                <div className="flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => handleAction(f.id, 'approving')}
-                                                        disabled={!!action}
-                                                        className="flex items-center gap-1.5 rounded-md bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                                    >
-                                                        {isActing && action.type === 'approving'
-                                                            ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                            : <CheckCircle className="h-4 w-4" />}
-                                                        Approve
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleAction(f.id, 'rejecting')}
-                                                        disabled={!!action}
-                                                        className="flex items-center gap-1.5 rounded-md bg-red-50 border border-red-200 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                                    >
-                                                        {isActing && action.type === 'rejecting'
-                                                            ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                            : <XCircle className="h-4 w-4" />}
-                                                        Reject
-                                                    </button>
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => handleAction(f.id, 'approving')}
+                                                            disabled={!!action}
+                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                                        >
+                                                            {isActing && action.type === 'approving' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAction(f.id, 'rejecting')}
+                                                            disabled={!!action}
+                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                                        >
+                                                            {isActing && action.type === 'rejecting' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                                                            Reject
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => handleAction(f.id, 'requesting_docs')}
+                                                            disabled={!!action}
+                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                                        >
+                                                            {isActing && action.type === 'requesting_docs' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
+                                                            Request Docs
+                                                        </button>
+                                                        <button
+                                                            onClick={() => toggleExpand(f.id)}
+                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all"
+                                                        >
+                                                            {expandedFamilyId === f.id ? 'Hide Details' : 'View Details'}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </motion.tr>
+                                        {expandedFamilyId === f.id && (
+                                            <tr className="bg-slate-50 border-b border-slate-200">
+                                                <td colSpan={5} className="p-6">
+                                                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                                        <h3 className="text-sm font-bold text-slate-800 mb-4">Family Members</h3>
+                                                        <div className="grid gap-4 md:grid-cols-2">
+                                                            {f.members?.map((m, idx) => (
+                                                                <div key={m.id} className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <span className="text-sm font-bold text-slate-900">{m.nameAsInAadhaar}</span>
+                                                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${m.isAadhaarVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                                                            {m.isAadhaarVerified ? 'Aadhaar Verified' : 'Aadhaar Pending'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs text-slate-600 mt-3">
+                                                                        <div><span className="text-slate-400">Phone:</span> {m.phoneAsInAadhaar}</div>
+                                                                        <div><span className="text-slate-400">Age:</span> {m.age}</div>
+                                                                        <div><span className="text-slate-400">Gender:</span> {m.gender}</div>
+                                                                        <div><span className="text-slate-400">Religion:</span> {m.religion}</div>
+                                                                        <div><span className="text-slate-400">Disabled:</span> {m.physicallyDisabled ? 'Yes' : 'No'}</div>
+                                                                        <div><span className="text-slate-400">Occupation:</span> {m.occupation}</div>
+                                                                        <div className="col-span-2"><span className="text-slate-400">Income:</span> {m.incomeRange}</div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                        </>
                                     );
                                 })}
                             </AnimatePresence>

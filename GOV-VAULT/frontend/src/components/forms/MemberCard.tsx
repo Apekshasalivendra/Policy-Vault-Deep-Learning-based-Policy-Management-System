@@ -9,14 +9,16 @@ import {
 import { mockApi } from '@/lib/api';
 
 // ── Types ────────────────────────────────────────────────────────────────────
-export interface MemberData {
-    name: string;
-    phone: string;
+    nameAsInAadhaar: string;
+    phoneAsInAadhaar: string;
     aadhaar: string;
     pan: string;
     incomeRange: string;
     occupation: string;
     age: string; // kept as string for input, parsed on submit
+    gender: string;
+    religion: string;
+    physicallyDisabled: boolean;
 }
 
 export interface MemberState {
@@ -33,7 +35,7 @@ export interface MemberState {
 }
 
 export const emptyMember = (): MemberState => ({
-    data: { name: '', phone: '', aadhaar: '', pan: '', incomeRange: '', occupation: '', age: '' },
+    data: { nameAsInAadhaar: '', phoneAsInAadhaar: '', aadhaar: '', pan: '', incomeRange: '', occupation: '', age: '', gender: 'Male', religion: 'Hindu', physicallyDisabled: false },
     aadhaarStatus: 'idle',
     aadhaarOtp: '',
     aadhaarDevOtp: '',
@@ -122,7 +124,7 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                     </div>
                     <div>
                         <p className="font-medium text-white text-sm">
-                            {member.data.name || `Member ${index + 1}`}
+                            {member.data.nameAsInAadhaar || `Member ${index + 1}`}
                             {isHead && <span className="ml-2 text-xs text-indigo-400 font-normal">(Head of Family)</span>}
                         </p>
                         <p className="text-xs text-slate-500">
@@ -156,44 +158,74 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                     >
                         <div className="grid gap-4 p-5 sm:grid-cols-2">
                             {/* Name */}
-                            <InputField icon={<User className="h-4 w-4" />} label="Full Name" required>
+                            <InputField icon={<User className="h-4 w-4" />} label="Name as in Aadhaar" required>
                                 <input
-                                    type="text" value={member.data.name} onChange={(e) => update('name', e.target.value)}
+                                    type="text" value={member.data.nameAsInAadhaar} onChange={(e) => update('nameAsInAadhaar', e.target.value)}
                                     placeholder="e.g. Priya Nair" className={inputClass}
                                 />
                             </InputField>
 
                             {/* Phone */}
-                            <InputField icon={<Phone className="h-4 w-4" />} label="Phone" required>
+                            <InputField icon={<Phone className="h-4 w-4" />} label="Phone as in Aadhaar" required>
                                 <input
-                                    type="tel" maxLength={10} value={member.data.phone} onChange={(e) => update('phone', e.target.value.replace(/\D/g, ''))}
+                                    type="tel" maxLength={10} value={member.data.phoneAsInAadhaar} onChange={(e) => update('phoneAsInAadhaar', e.target.value.replace(/\D/g, ''))}
                                     placeholder="10-digit mobile number" className={inputClass}
                                 />
                             </InputField>
 
-                            {/* Age */}
-                            <InputField icon={<Calendar className="h-4 w-4" />} label="Age" required>
-                                <input
-                                    type="number" min={0} max={120} value={member.data.age} onChange={(e) => update('age', e.target.value)}
-                                    placeholder="Age in years" className={inputClass}
-                                />
-                            </InputField>
+                            {/* Age & Gender */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputField icon={<Calendar className="h-4 w-4" />} label="Age" required>
+                                    <input
+                                        type="number" min={0} max={120} value={member.data.age} onChange={(e) => update('age', e.target.value)}
+                                        placeholder="Age in years" className={inputClass}
+                                    />
+                                </InputField>
+                                <InputField icon={<User className="h-4 w-4" />} label="Gender" required>
+                                    <select value={member.data.gender} onChange={(e) => update('gender', e.target.value)} className={inputClass}>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </InputField>
+                            </div>
 
-                            {/* Occupation */}
-                            <InputField icon={<Briefcase className="h-4 w-4" />} label="Occupation" required>
-                                <input
-                                    type="text" value={member.data.occupation} onChange={(e) => update('occupation', e.target.value)}
-                                    placeholder="e.g. Farmer, Student, Retired" className={inputClass}
-                                />
-                            </InputField>
+                            {/* Occupation & Religion */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputField icon={<Briefcase className="h-4 w-4" />} label="Occupation" required>
+                                    <input
+                                        type="text" value={member.data.occupation} onChange={(e) => update('occupation', e.target.value)}
+                                        placeholder="e.g. Farmer" className={inputClass}
+                                    />
+                                </InputField>
+                                <InputField icon={<User className="h-4 w-4" />} label="Religion" required>
+                                    <select value={member.data.religion} onChange={(e) => update('religion', e.target.value)} className={inputClass}>
+                                        <option value="Hindu">Hindu</option>
+                                        <option value="Muslim">Muslim</option>
+                                        <option value="Christian">Christian</option>
+                                        <option value="Sikh">Sikh</option>
+                                        <option value="Buddhist">Buddhist</option>
+                                        <option value="Jain">Jain</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </InputField>
+                            </div>
 
-                            {/* Income Range */}
-                            <InputField icon={<DollarSign className="h-4 w-4" />} label="Income Range" required>
-                                <select value={member.data.incomeRange} onChange={(e) => update('incomeRange', e.target.value)} className={inputClass}>
-                                    <option value="">Select income range</option>
-                                    {INCOME_RANGES.map((r) => <option key={r} value={r}>{r}</option>)}
-                                </select>
-                            </InputField>
+                            {/* Income Range & Disability */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputField icon={<DollarSign className="h-4 w-4" />} label="Income Range" required>
+                                    <select value={member.data.incomeRange} onChange={(e) => update('incomeRange', e.target.value)} className={inputClass}>
+                                        <option value="">Select income range</option>
+                                        {INCOME_RANGES.map((r) => <option key={r} value={r}>{r}</option>)}
+                                    </select>
+                                </InputField>
+                                <InputField icon={<ShieldCheck className="h-4 w-4" />} label="Disability Status" required>
+                                    <select value={member.data.physicallyDisabled ? 'true' : 'false'} onChange={(e) => update('physicallyDisabled', e.target.value === 'true' ? true as any : false as any)} className={inputClass}>
+                                        <option value="false">Not Disabled</option>
+                                        <option value="true">Physically Disabled</option>
+                                    </select>
+                                </InputField>
+                            </div>
 
                             {/* Aadhaar */}
                             <InputField icon={<ShieldCheck className="h-4 w-4" />} label="Aadhaar Number" required className="sm:col-span-2">

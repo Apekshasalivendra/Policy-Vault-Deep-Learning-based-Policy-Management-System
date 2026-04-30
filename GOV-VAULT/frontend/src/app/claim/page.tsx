@@ -11,6 +11,12 @@ import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { familyApi, claimApi } from '@/lib/api';
 
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface FamilyMember {
     id: string;
@@ -51,6 +57,17 @@ function ClaimContent() {
     const [pageState, setPageState] = useState<PageState>({ kind: 'loading' });
     const [selectedMemberId, setSelectedMemberId] = useState('');
     const [submitState, setSubmitState] = useState<SubmitState>({ kind: 'idle' });
+    const [verificationMethod, setVerificationMethod] = useState<'RAZORPAY' | 'MANUAL'>('RAZORPAY');
+
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
 
     // Auto-redirect removed because we redirect manually to the dynamic route
     useEffect(() => {
@@ -99,9 +116,46 @@ function ClaimContent() {
         setSubmitState({ kind: 'submitting' });
 
         try {
-            const res = await claimApi.initiateClaim(selectedMemberId, schemeId);
-            setSubmitState({ kind: 'success', claimId: res.data.id });
-            setTimeout(() => router.push('/dashboard'), 3000);
+            if (verificationMethod === 'RAZORPAY') {
+                const sdkLoaded = await loadRazorpay();
+                if (!sdkLoaded) {
+                    setSubmitState({ kind: 'error', code: 'other', message: 'Failed to load Razorpay SDK' });
+                    return;
+                }
+
+                // Call initiate API
+                const res = await claimApi.initiateClaim(selectedMemberId, schemeId);
+                const claimId = res.data.id;
+
+                const options = {
+                    key: 'rzp_test_ScHtzspSTvvi1X',
+                    amount: '100', // 1 INR in paise
+                    currency: 'INR',
+                    name: 'GOV-VAULT KYC',
+                    description: 'Penny Drop Bank Verification',
+                    handler: function (response: any) {
+                        setSubmitState({ kind: 'success', claimId });
+                        setTimeout(() => router.push('/dashboard'), 3000);
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            setSubmitState({ kind: 'idle' });
+                        }
+                    },
+                    prefill: {
+                        name: 'Claimant',
+                        email: 'user@govvault.in'
+                    },
+                    theme: { color: '#2563eb' }
+                };
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } else {
+                // Manual fallback
+                const res = await claimApi.initiateClaim(selectedMemberId, schemeId);
+                setSubmitState({ kind: 'success', claimId: res.data.id });
+                setTimeout(() => router.push('/dashboard'), 3000);
+            }
         } catch (err) {
             const error = err as { response?: { status?: number; data?: { error?: string } } };
             const status = error.response?.status;
@@ -357,6 +411,33 @@ function ClaimContent() {
                                     </motion.div>
                                 )}
 
+                                {/* KYC Options */}
+                                {selectedMemberId && (
+                                    <div className="mt-6 border-t border-slate-100 pt-6">
+                                        <label className="mb-3 block text-sm font-bold text-slate-700">
+                                            Select KYC Verification Method
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-4 mb-6">
+                                            <div 
+                                                onClick={() => setVerificationMethod('RAZORPAY')}
+                                                className={`cursor-pointer rounded-xl border p-4 text-center transition-all ${verificationMethod === 'RAZORPAY' ? 'border-[var(--gov-blue)] bg-blue-50 ring-1 ring-[var(--gov-blue)]' : 'border-slate-200 bg-slate-50 hover:border-slate-300'}`}
+                                            >
+                                                <div className="flex justify-center mb-2"><CheckCircle className={`h-5 w-5 ${verificationMethod === 'RAZORPAY' ? 'text-[var(--gov-blue)]' : 'text-slate-400'}`} /></div>
+                                                <p className="text-sm font-bold text-slate-900">Instant API Match</p>
+                                                <p className="text-xs font-medium text-slate-500 mt-1">1 INR Penny Drop</p>
+                                            </div>
+                                            <div 
+                                                onClick={() => setVerificationMethod('MANUAL')}
+                                                className={`cursor-pointer rounded-xl border p-4 text-center transition-all ${verificationMethod === 'MANUAL' ? 'border-[var(--gov-blue)] bg-blue-50 ring-1 ring-[var(--gov-blue)]' : 'border-slate-200 bg-slate-50 hover:border-slate-300'}`}
+                                            >
+                                                <div className="flex justify-center mb-2"><FileText className={`h-5 w-5 ${verificationMethod === 'MANUAL' ? 'text-[var(--gov-blue)]' : 'text-slate-400'}`} /></div>
+                                                <p className="text-sm font-bold text-slate-900">Manual Upload</p>
+                                                <p className="text-xs font-medium text-slate-500 mt-1">Takes 3-5 Days</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Submit button */}
                                 <button
                                     onClick={handleSubmit}
@@ -365,11 +446,11 @@ function ClaimContent() {
                                 >
                                     {submitState.kind === 'submitting' ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 animate-spin" /> Submitting claim…
+                                            <Loader2 className="h-4 w-4 animate-spin" /> {verificationMethod === 'RAZORPAY' ? 'Loading Gateway...' : 'Submitting claim...'}
                                         </>
                                     ) : (
                                         <>
-                                            <Send className="h-4 w-4" /> Submit Claim
+                                            <Send className="h-4 w-4" /> {verificationMethod === 'RAZORPAY' ? 'Verify via Razorpay (₹1)' : 'Submit Manual Claim'}
                                         </>
                                     )}
                                 </button>

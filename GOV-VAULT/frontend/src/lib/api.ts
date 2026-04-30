@@ -36,18 +36,22 @@ api.interceptors.response.use(
 export const authApi = {
     login: (email: string, password: string) =>
         api.post<{ token: string }>('/auth/login', { email, password }),
-    register: (email: string, password: string) =>
-        api.post('/auth/register', { email, password }),
+    sendVerificationEmail: (email: string) =>
+        api.post('/auth/send-verification-email', { email }),
+    verifyEmail: (email: string, otp: string) =>
+        api.post<{ verificationToken: string }>('/auth/verify-email', { email, otp }),
+    register: (email: string, password: string, verificationToken: string) =>
+        api.post('/auth/register', { email, password, verificationToken }),
     me: () => api.get('/auth/me'),
 };
 
 // ── Family endpoints ──────────────────────────────────────────────────────────
 export const familyApi = {
     getMyFamily: () => api.get('/family/my'),
-    create: (members: unknown[], aadhaarVerificationToken: string) =>
+    create: (members: unknown[], aadhaarVerificationToken: string, state?: string, category?: string) =>
         api.post<{ family: { temporaryFamilyId: string; status: string } }>(
             '/family/create',
-            { members, aadhaarVerificationToken }
+            { members, aadhaarVerificationToken, state, category }
         ),
 };
 
@@ -124,6 +128,7 @@ export const adminApi = {
     getPendingFamilies: () => api.get('/admin/families/pending'),
     approveFamily: (id: string) => api.post(`/admin/family/${id}/approve`),
     rejectFamily: (id: string) => api.post(`/admin/family/${id}/reject`),
+    requestDocs: (id: string) => api.post(`/admin/family/${id}/request-docs`),
     getPendingClaims: () => api.get('/admin/claims/pending'),
     approveClaim: (id: string) => api.post(`/admin/claim/${id}/approve`),
     rejectClaim: (id: string) => api.post(`/admin/claim/${id}/reject`),

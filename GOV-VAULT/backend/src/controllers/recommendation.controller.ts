@@ -19,17 +19,17 @@ export const recommend = async (req: Request, res: Response): Promise<void> => {
         }
 
         // 2. Use the primary member (first in list) to build the AI payload
-        //    Additional members' occupations/income are aggregated in additional_details
         const primary = family.members[0];
+        const familyState = (family as any).state || 'Andhra Pradesh';
+        const familyCategory = (family as any).category || 'General';
 
-        // Income range mapping: prefer primary member, include family count for context
         const payload: RecommendationPayload = {
-            state: req.body?.state || 'Maharashtra',   // can be overridden via request body
+            state: req.body?.state || familyState,
             incomeRange: primary.incomeRange,
             occupation: primary.occupation,
             age: primary.age,
-            gender: req.body?.gender || 'Male',         // family member gender not stored — allow override
-            category: req.body?.category || 'General',   // caste category — allow override
+            gender: req.body?.gender || 'Male',
+            category: req.body?.category || familyCategory,
             familySize: family.memberCount,
         };
 

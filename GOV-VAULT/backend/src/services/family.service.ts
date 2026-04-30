@@ -9,13 +9,16 @@ const MAX_MEMBERS = 8;
 const MAX_FAMILIES_PER_USER_PER_DAY = 3;
 
 interface MemberInput {
-    name: string;
-    phone: string;
+    nameAsInAadhaar: string;
+    phoneAsInAadhaar: string;
     aadhaar: string;
     pan?: string;
     incomeRange: string;
     occupation: string;
     age: number;
+    gender: string;
+    religion: string;
+    physicallyDisabled: boolean;
 }
 
 interface AadhaarVerificationPayload {
@@ -51,7 +54,9 @@ function decodeVerificationToken(token: string): AadhaarVerificationPayload {
 export const createFamily = async (
     userId: string,
     members: MemberInput[],
-    aadhaarVerificationToken: string
+    aadhaarVerificationToken: string,
+    state?: string,
+    category?: string
 ) => {
     // 1. Validate member count
     if (!members || members.length === 0) {
@@ -87,14 +92,14 @@ export const createFamily = async (
     for (const m of members) {
         const ah = hashValue(m.aadhaar);
         if (aadhaarSet.has(ah)) {
-            throw new Error(`Duplicate Aadhaar found in request (member: ${m.name})`);
+            throw new Error(`Duplicate Aadhaar found in request (member: ${m.nameAsInAadhaar})`);
         }
         aadhaarSet.add(ah);
 
         if (m.pan) {
             const ph = hashValue(m.pan);
             if (panSet.has(ph)) {
-                throw new Error(`Duplicate PAN found in request (member: ${m.name})`);
+                throw new Error(`Duplicate PAN found in request (member: ${m.nameAsInAadhaar})`);
             }
             panSet.add(ph);
         }
@@ -129,11 +134,13 @@ export const createFamily = async (
             data: {
                 temporaryFamilyId,
                 status: FamilyStatus.PENDING,
+                state: state || "Andhra Pradesh",
+                category: category || "General",
                 createdById: userId,
                 members: {
                     create: members.map((m) => ({
-                        name: m.name,
-                        phone: m.phone,
+                        nameAsInAadhaar: m.nameAsInAadhaar,
+                        phoneAsInAadhaar: m.phoneAsInAadhaar,
                         aadhaarEncrypted: encrypt(m.aadhaar),
                         aadhaarHash: hashValue(m.aadhaar),
                         panEncrypted: m.pan ? encrypt(m.pan) : null,
@@ -141,6 +148,9 @@ export const createFamily = async (
                         incomeRange: m.incomeRange,
                         occupation: m.occupation,
                         age: m.age,
+                        gender: m.gender,
+                        religion: m.religion,
+                        physicallyDisabled: m.physicallyDisabled,
                         isAadhaarVerified: true,  // verified via token
                         isPanVerified: false,      // PAN verified via format only
                     })),
@@ -172,8 +182,8 @@ export const getFamilyById = async (familyId: string, userId: string) => {
         include: {
             members: {
                 select: {
-                    id: true, name: true, phone: true, incomeRange: true,
-                    occupation: true, age: true, isAadhaarVerified: true, isPanVerified: true, createdAt: true,
+                    id: true, nameAsInAadhaar: true, phoneAsInAadhaar: true, incomeRange: true,
+                    occupation: true, age: true, gender: true, religion: true, physicallyDisabled: true, isAadhaarVerified: true, isPanVerified: true, createdAt: true,
                 },
             },
         },
@@ -199,13 +209,16 @@ export const getMyFamily = async (userId: string) => {
     // Decrypt sensitive fields and strip storage-only fields
     const safeMembers = family.members.map((m) => ({
         id: m.id,
-        name: m.name,
-        phone: m.phone,
+        nameAsInAadhaar: m.nameAsInAadhaar,
+        phoneAsInAadhaar: m.phoneAsInAadhaar,
         aadhaar: decrypt(m.aadhaarEncrypted),          // decrypted for owner
         pan: m.panEncrypted ? decrypt(m.panEncrypted) : null,
         incomeRange: m.incomeRange,
         occupation: m.occupation,
         age: m.age,
+        gender: m.gender,
+        religion: m.religion,
+        physicallyDisabled: m.physicallyDisabled,
         isAadhaarVerified: m.isAadhaarVerified,
         isPanVerified: m.isPanVerified,
         createdAt: m.createdAt,
@@ -216,6 +229,8 @@ export const getMyFamily = async (userId: string) => {
         id: family.id,
         temporaryFamilyId: family.temporaryFamilyId,
         status: family.status,
+        state: family.state,
+        category: family.category,
         createdAt: family.createdAt,
         memberCount: safeMembers.length,
         members: safeMembers,

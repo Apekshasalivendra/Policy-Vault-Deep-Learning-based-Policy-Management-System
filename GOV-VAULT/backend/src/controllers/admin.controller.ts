@@ -55,6 +55,19 @@ export const rejectFamily = async (req: Request, res: Response): Promise<void> =
     }
 };
 
+// ── POST /admin/family/:id/request-docs ─────────────────────────────────────
+export const requestDocs = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user!.userId;
+        const family = await adminService.requestDocs(adminId, id);
+        res.json({ message: 'Document request email sent', family });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to request documents';
+        res.status(400).json({ error: message });
+    }
+};
+
 // ── GET /admin/dashboard ──────────────────────────────────────────────────────
 export const getDashboard = async (_req: Request, res: Response): Promise<void> => {
     try {

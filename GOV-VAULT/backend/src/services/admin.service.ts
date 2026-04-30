@@ -1,5 +1,6 @@
 import { PrismaClient, FamilyStatus, ClaimStatus } from '@prisma/client';
 import axios from 'axios';
+import { sendMockDocumentRequestEmail } from './email.service';
 
 const prisma = new PrismaClient();
 const ENTITLEMENT_SERVICE_URL = process.env.ENTITLEMENT_SERVICE_URL || 'http://localhost:4000';
@@ -21,6 +22,21 @@ export const listPendingFamilies = async () => {
         where: { status: FamilyStatus.PENDING },
         include: {
             createdBy: { select: { id: true, email: true } },
+            members: {
+                select: {
+                    id: true,
+                    nameAsInAadhaar: true,
+                    phoneAsInAadhaar: true,
+                    age: true,
+                    gender: true,
+                    religion: true,
+                    physicallyDisabled: true,
+                    occupation: true,
+                    incomeRange: true,
+                    isAadhaarVerified: true,
+                    isPanVerified: true,
+                }
+            },
             _count: { select: { members: true } },
         },
         orderBy: { createdAt: 'asc' },
@@ -79,6 +95,31 @@ export const rejectFamily = async (adminId: string, familyId: string) => {
     });
 
     return updated;
+};
+
+// ── Request Mock Documents ──────────────────────────────────────────────────
+export const requestDocs = async (adminId: string, familyId: string) => {
+    const family = await prisma.family.findUnique({
+        where: { id: familyId },
+        include: { createdBy: { select: { email: true } } },
+    });
+    if (!family) throw new Error('Family not found');
+    if (family.status !== FamilyStatus.PENDING) {
+        throw new Error(`Cannot request docs for family with status ${family.status}`);
+    }
+
+    // Send email to the user who created the family
+    if (family.createdBy?.email) {
+        await sendMockDocumentRequestEmail(family.createdBy.email, familyId);
+    } else {
+        throw new Error('User email not found for this family');
+    }
+
+    await prisma.auditLog.create({
+        data: { userId: adminId, action: `DOCS_REQUESTED:${family.temporaryFamilyId}` },
+    });
+
+    return family;
 };
 
 // ── List All Families (with filter) ──────────────────────────────────────────

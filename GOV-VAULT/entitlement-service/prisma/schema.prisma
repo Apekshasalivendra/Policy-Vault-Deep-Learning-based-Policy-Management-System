@@ -71,6 +71,11 @@ enum DeathReportStatus {
   REJECTED
 }
 
+enum VerificationMethod {
+  RAZORPAY_AUTOMATED
+  MANUAL_DOCUMENT
+}
+
 // ----------------------------------------------------------------------------
 // MODELS
 // ----------------------------------------------------------------------------
@@ -141,6 +146,19 @@ model StructuredClaim {
   isClosed        Boolean          @default(false)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+
+  // Verification Checklist
+  isIdentityVerified      Boolean @default(false)
+  isBankVerified          Boolean @default(false)
+  isDeathVerified         Boolean? // Null if policy owner is alive
+  isRelationshipVerified  Boolean? // Null if claimant is the owner
+  
+  // KYC Tracking
+  bankVerificationMethod  VerificationMethod?
+  razorpayReferenceId     String?  // Stores the Order ID / Validation ID
+  
+  // To track minor/heir edge cases
+  claimantRole            String   @default("OWNER") // "OWNER", "NOMINEE", "GUARDIAN", "LEGAL_HEIR"
 
   documents ClaimDocument[]
   timeline  ClaimTimeline[]

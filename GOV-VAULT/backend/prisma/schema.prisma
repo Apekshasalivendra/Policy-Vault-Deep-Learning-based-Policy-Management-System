@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
@@ -11,48 +8,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
-
-enum Role {
-  USER
-  ADMIN
-}
-
-enum FamilyStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum ClaimStatus {
-  PENDING // Legacy
-  INITIATED
-  DOCUMENTS_PENDING
-  PRE_VERIFIED
-  SUBMITTED
-  APPROVED
-  REJECTED
-  SETTLED
-}
-
-// Phase 5 — tracks whether a claim was AI-recommended or manually initiated
-enum ClaimSource {
-  AI_RECOMMENDED
-  MANUAL
-}
-
-// ── Models ────────────────────────────────────────────────────────────────────
-
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  password           String
+  role               Role                @default(USER)
+  createdAt          DateTime            @default(now())
   auditLogs          AuditLog[]
   families           Family[]
-  recommendationLogs RecommendationLog[] // Phase 5
+  recommendationLogs RecommendationLog[]
 
   @@map("users")
 }
@@ -62,45 +26,47 @@ model AuditLog {
   userId    String
   action    String
   timestamp DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("audit_logs")
 }
 
 model Family {
-  id                String       @id @default(uuid())
-  temporaryFamilyId String       @unique
-  status            FamilyStatus @default(PENDING)
-  createdById       String
-  createdAt         DateTime     @default(now())
-
+  id                 String              @id @default(uuid())
+  temporaryFamilyId  String              @unique
+  status             FamilyStatus        @default(PENDING)
+  createdById        String
+  createdAt          DateTime            @default(now())
+  category           String              @default("General")
+  state              String              @default("Andhra Pradesh")
+  claims             Claim[]
   createdBy          User                @relation(fields: [createdById], references: [id], onDelete: Cascade)
   members            FamilyMember[]
-  claims             Claim[]
-  recommendationLogs RecommendationLog[] // Phase 5
+  recommendationLogs RecommendationLog[]
 
   @@map("families")
 }
 
 model FamilyMember {
-  id                String   @id @default(uuid())
-  familyId          String
-  name              String
-  phone             String
-  aadhaarEncrypted  String
-  aadhaarHash       String // SHA-256 of raw Aadhaar — used for duplicate detection
-  panEncrypted      String?
-  panHash           String? // SHA-256 of raw PAN — used for duplicate detection
-  incomeRange       String
-  occupation        String
-  age               Int
-  isAadhaarVerified Boolean  @default(false)
-  isPanVerified     Boolean  @default(false)
-  createdAt         DateTime @default(now())
-
-  family Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  claims Claim[]
+  id                 String   @id @default(uuid())
+  familyId           String
+  nameAsInAadhaar    String
+  phoneAsInAadhaar   String
+  aadhaarEncrypted   String
+  aadhaarHash        String
+  panEncrypted       String?
+  panHash            String?
+  incomeRange        String
+  occupation         String
+  age                Int
+  gender             String   @default("Male")
+  religion           String   @default("Hindu")
+  physicallyDisabled Boolean  @default(false)
+  isAadhaarVerified  Boolean  @default(false)
+  isPanVerified      Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  claims            Claim[]
+  family            Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   @@index([aadhaarHash])
   @@index([panHash])
@@ -108,49 +74,33 @@ model FamilyMember {
 }
 
 model Claim {
-  id        String      @id @default(uuid())
+  id        String       @id @default(uuid())
   familyId  String
   memberId  String
   schemeId  String
-  status    ClaimStatus @default(PENDING)
-  source    ClaimSource @default(MANUAL) // Phase 5 — AI_RECOMMENDED or MANUAL
-  createdAt DateTime    @default(now())
-
-  family Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  member FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  status    ClaimStatus  @default(PENDING)
+  source    ClaimSource  @default(MANUAL)
+  createdAt DateTime     @default(now())
+  family    Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@map("claims")
 }
-
-// ── Phase 5 — Recommendation Intelligence ─────────────────────────────────────
 
 model RecommendationLog {
   id              String   @id @default(uuid())
   userId          String
   familyId        String
-  // inputSnapshot: profile sent to AI (state, incomeRange, occupation, age, etc.)
-  // NO Aadhaar, PAN, or encrypted fields stored here — data safety enforced
   inputSnapshot   Json
-  // schemesSnapshot: exact AI response (schemeId, schemeName, benefitSummary, etc.)
   schemesSnapshot Json
   createdAt       DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  family          Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([familyId])
   @@index([createdAt])
   @@map("recommendation_logs")
-}
-
-// ── Phase 7 — Audit + Notification Layer ─────────────────────────────────────
-
-enum NotificationType {
-  CLAIM_SUBMITTED
-  CLAIM_APPROVED
-  CLAIM_REJECTED
-  CLAIM_SETTLED
 }
 
 model Notification {
@@ -166,4 +116,38 @@ model Notification {
   @@index([userId, isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum FamilyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ClaimStatus {
+  PENDING
+  INITIATED
+  DOCUMENTS_PENDING
+  PRE_VERIFIED
+  SUBMITTED
+  APPROVED
+  REJECTED
+  SETTLED
+}
+
+enum ClaimSource {
+  AI_RECOMMENDED
+  MANUAL
+}
+
+enum NotificationType {
+  CLAIM_SUBMITTED
+  CLAIM_APPROVED
+  CLAIM_REJECTED
+  CLAIM_SETTLED
 }

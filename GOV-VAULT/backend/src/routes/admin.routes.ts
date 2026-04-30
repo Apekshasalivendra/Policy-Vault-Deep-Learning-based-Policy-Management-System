@@ -4,6 +4,7 @@ import {
     getAllFamilies,
     approveFamily,
     rejectFamily,
+    requestDocs,
     getDashboard,
     getPendingClaims,
     approveClaim,
@@ -22,6 +23,7 @@ router.get('/families/pending', getPendingFamilies);
 router.get('/families', getAllFamilies);
 router.post('/family/:id/approve', approveFamily);
 router.post('/family/:id/reject', rejectFamily);
+router.post('/family/:id/request-docs', requestDocs);
 router.get('/claims/pending', getPendingClaims);   // Phase 3
 router.post('/claim/:id/approve', approveClaim);   // Phase 3
 router.post('/claim/:id/reject', rejectClaim);     // Phase 3
