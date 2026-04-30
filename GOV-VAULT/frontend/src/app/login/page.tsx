@@ -3,15 +3,15 @@
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, Loader2 } from 'lucide-react';
+import { Shield, Mail, Lock, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
-    const { login, role } = useAuth();
+    const { login } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPw, setShowPw] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -21,7 +21,6 @@ export default function LoginPage() {
         setLoading(true);
         try {
             await login(email, password);
-            // Redirect based on role
             const token = localStorage.getItem('govvault_token');
             if (token) {
                 const payload = JSON.parse(atob(token.split('.')[1]));
@@ -29,7 +28,7 @@ export default function LoginPage() {
             }
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { error?: string } } })
-                ?.response?.data?.error || 'Invalid credentials';
+                ?.response?.data?.error || 'Invalid email or password.';
             setError(msg);
         } finally {
             setLoading(false);
@@ -37,82 +36,114 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 relative">
-            <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-            >
-                <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 shadow-lg relative overflow-hidden">
-                    {/* Header */}
-                    <div className="absolute top-0 left-0 bg-[var(--gov-blue)] w-full h-1.5" />
-                    
-                    <div className="mb-8 text-center pt-2">
-                        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 border border-blue-100 shadow-sm">
-                            <Shield className="h-8 w-8 text-[var(--gov-blue)]" />
-                        </div>
-                        <h1 className="text-3xl font-black text-[var(--gov-blue)] tracking-tight">Citizen Portal</h1>
-                        <p className="mt-2 text-sm font-medium text-slate-500">Sign in to GOV-VAULT secure framework</p>
-                    </div>
+        <div style={{ background: 'var(--bg-page)', minHeight: 'calc(100vh - 68px)' }}
+            className="flex items-center justify-center px-4 py-12">
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div>
-                            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">Email Address</label>
-                            <div className="relative border border-slate-300 rounded-md bg-slate-50 shadow-sm overflow-hidden focus-within:border-[var(--gov-blue)] focus-within:ring-1 focus-within:ring-[var(--gov-blue)] transition-all">
-                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="you@example.com"
-                                    className="w-full bg-transparent py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none"
-                                />
+            <div style={{ width: '100%', maxWidth: 440 }}>
+
+                {/* Card */}
+                <div className="card-elevated overflow-hidden">
+                    {/* Top accent */}
+                    <div style={{ height: 4, background: 'var(--gov-blue)', width: '100%' }} />
+
+                    <div className="p-8">
+                        {/* Header */}
+                        <div className="text-center mb-8">
+                            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl"
+                                style={{ background: '#e8f0f8' }}>
+                                <Shield size={26} style={{ color: 'var(--gov-blue)' }} />
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">Secure Password</label>
-                            <div className="relative border border-slate-300 rounded-md bg-slate-50 shadow-sm overflow-hidden focus-within:border-[var(--gov-blue)] focus-within:ring-1 focus-within:ring-[var(--gov-blue)] transition-all">
-                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                                <input
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-full bg-transparent py-3 pl-11 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        {error && (
-                            <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 shadow-sm flex items-center gap-2">
-                                <div className="h-1.5 w-1.5 rounded-full bg-red-600 shrink-0" />
-                                {error}
+                            <h1 className="text-2xl font-black" style={{ color: 'var(--gov-blue)' }}>
+                                Citizen Portal
+                            </h1>
+                            <p className="mt-1.5 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                                Sign in to GOV-VAULT Secure Framework
                             </p>
-                        )}
+                        </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[var(--gov-blue)] py-3.5 text-sm font-bold text-white shadow-sm hover:brightness-110 disabled:opacity-60 transition-all"
-                        >
-                            {loading && <Loader2 className="h-5 w-5 animate-spin" />}
-                            {loading ? 'Authenticating…' : 'Secure Sign In'}
-                        </button>
-                    </form>
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="space-y-5">
 
-                    <p className="mt-8 text-center text-sm font-medium text-slate-500">
-                        Don&apos;t have an account?{' '}
-                        <Link href="/register" className="font-bold text-[var(--gov-blue)] hover:underline">
-                            Register your family
-                        </Link>
-                    </p>
+                            {/* Email */}
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5"
+                                    style={{ color: 'var(--text-secondary)' }}>
+                                    Email Address
+                                </label>
+                                <div className="relative">
+                                    <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                                        style={{ color: 'var(--text-muted)' }} />
+                                    <input
+                                        type="email" required value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="you@example.com"
+                                        className="form-input"
+                                        style={{ paddingLeft: 40 }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Password */}
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5"
+                                    style={{ color: 'var(--text-secondary)' }}>
+                                    Password
+                                </label>
+                                <div className="relative">
+                                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                                        style={{ color: 'var(--text-muted)' }} />
+                                    <input
+                                        type={showPw ? 'text' : 'password'} required value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="form-input"
+                                        style={{ paddingLeft: 40, paddingRight: 44 }}
+                                    />
+                                    <button type="button" tabIndex={-1}
+                                        onClick={() => setShowPw(v => !v)}
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2"
+                                        style={{ color: 'var(--text-muted)' }}>
+                                        {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Error */}
+                            {error && (
+                                <div className="alert alert-error">
+                                    <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                                    {error}
+                                </div>
+                            )}
+
+                            <button type="submit" disabled={loading}
+                                className="btn-primary w-full justify-center py-3 text-base">
+                                {loading
+                                    ? <><Loader2 size={18} className="animate-spin" /> Authenticating…</>
+                                    : 'Sign In Securely'
+                                }
+                            </button>
+                        </form>
+
+                        {/* Divider */}
+                        <div className="section-divider mt-7 mb-5" />
+
+                        <p className="text-center text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                            Don&apos;t have an account?{' '}
+                            <Link href="/register"
+                                className="font-bold hover:underline"
+                                style={{ color: 'var(--gov-blue)' }}>
+                                Register your family
+                            </Link>
+                        </p>
+                    </div>
                 </div>
-            </motion.div>
+
+                {/* Security note */}
+                <p className="mt-4 text-center text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                    Protected by AES-256 encryption. Your data is secure.
+                </p>
+            </div>
         </div>
     );
 }

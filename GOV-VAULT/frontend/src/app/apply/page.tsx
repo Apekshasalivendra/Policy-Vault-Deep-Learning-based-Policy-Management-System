@@ -83,38 +83,27 @@ function ApplyContent() {
     // ── Success Screen ────────────────────────────────────────────────────────────
     if (success) {
         return (
-            <div className="flex min-h-[60vh] items-center justify-center px-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="glass-card w-full max-w-lg rounded-3xl p-10 text-center"
-                >
-                    <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                        className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/30"
-                    >
-                        <CheckCircle className="h-10 w-10 text-emerald-400" />
-                    </motion.div>
-
-                    <h2 className="mb-2 text-2xl font-bold text-white">Registration Submitted!</h2>
-                    <p className="mb-6 text-slate-400">Your family registration is under review.</p>
-
-                    <div className="mb-6 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-6">
-                        <p className="text-xs uppercase tracking-widest text-slate-500 mb-2">Temporary Family ID</p>
-                        <p className="text-3xl font-mono font-bold tracking-widest text-indigo-300">
+            <div style={{ background: 'var(--bg-page)', minHeight: 'calc(100vh - 68px)' }}
+                className="flex items-center justify-center px-4">
+                <div className="card-elevated w-full max-w-lg p-10 text-center" style={{ borderTop: '4px solid #16a34a' }}>
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+                        style={{ background: '#dcfce7', border: '2px solid #86efac' }}>
+                        <CheckCircle size={40} style={{ color: '#16a34a' }} />
+                    </div>
+                    <h2 className="mb-2 text-2xl font-black" style={{ color: 'var(--gov-blue)' }}>Registration Submitted!</h2>
+                    <p className="mb-6 font-medium" style={{ color: 'var(--text-secondary)' }}>Your family registration is under review by an administrator.</p>
+                    <div className="mb-6 rounded-xl p-5" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Temporary Family ID</p>
+                        <p className="text-2xl font-mono font-black tracking-widest" style={{ color: 'var(--gov-blue)' }}>
                             {success.temporaryFamilyId}
                         </p>
                     </div>
-
-                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-400 mb-6">
-                        <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                    <div className="badge badge-pending mx-auto mb-6">
+                        <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--warning)' }} />
                         Status: {success.status}
                     </div>
-
-                    <p className="text-xs text-slate-600">Redirecting to dashboard in 4 seconds…</p>
-                </motion.div>
+                    <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Redirecting to dashboard in 4 seconds…</p>
+                </div>
             </div>
         );
     }
@@ -123,47 +112,49 @@ function ApplyContent() {
     const verifiedCount = members.filter((m) => m.aadhaarStatus === 'verified').length;
 
     return (
-        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <div style={{ background: 'var(--bg-page)', minHeight: 'calc(100vh - 68px)' }}>
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
             {/* Page header */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600/20 border border-indigo-500/30">
-                        <Users className="h-5 w-5 text-indigo-400" />
+            <div className="mb-6 pb-5" style={{ borderBottom: '1.5px solid var(--border)' }}>
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl"
+                        style={{ background: '#e8f0f8', color: 'var(--gov-blue)' }}>
+                        <Users size={20} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Family Registration</h1>
-                        <p className="text-sm text-slate-500">Register your family for government welfare schemes</p>
+                        <h1 className="text-2xl font-black" style={{ color: 'var(--gov-blue)' }}>Family Registration</h1>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Register your family for government welfare schemes</p>
                     </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="mt-4 rounded-xl border border-white/8 bg-white/3 p-4">
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+                <div className="mt-5 rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <div className="flex items-center justify-between text-xs font-semibold mb-2"
+                        style={{ color: 'var(--text-secondary)' }}>
                         <span>{members.length} member{members.length !== 1 ? 's' : ''} added (max {MAX_MEMBERS})</span>
                         <span>{verifiedCount} / {members.length} Aadhaar verified</span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-white/5">
-                        <div
-                            className="h-1.5 rounded-full bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${members.length > 0 ? (verifiedCount / members.length) * 100 : 0}%` }}
-                        />
+                    <div className="h-2 w-full rounded-full" style={{ background: 'var(--bg-hover)' }}>
+                        <div className="h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${members.length > 0 ? (verifiedCount / members.length) * 100 : 0}%`, background: '#16a34a' }} />
                     </div>
                     {!headVerified && (
-                        <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-500/80">
-                            <AlertCircle className="h-3.5 w-3.5" />
+                        <p className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold"
+                            style={{ color: 'var(--warning)' }}>
+                            <AlertCircle size={13} />
                             The first member (Head of Family) must have their Aadhaar verified to submit.
                         </p>
                     )}
                 </div>
 
                 {/* State & Category Selection */}
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                        <label className="mb-1.5 block text-xs font-medium text-slate-400">Current State *</label>
+                <div className="grid grid-cols-2 gap-4 mt-5">
+                    <div>
+                        <label className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Current State *</label>
                         <select 
                             value={state} 
                             onChange={(e) => setState(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                            className="form-input"
                         >
                             <option value="Andhra Pradesh">Andhra Pradesh</option>
                             <option value="Arunachal Pradesh">Arunachal Pradesh</option>
@@ -195,12 +186,12 @@ function ApplyContent() {
                             <option value="West Bengal">West Bengal</option>
                         </select>
                     </div>
-                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                        <label className="mb-1.5 block text-xs font-medium text-slate-400">Caste Category *</label>
+                    <div>
+                        <label className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Caste Category *</label>
                         <select 
                             value={category} 
                             onChange={(e) => setCategory(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                            className="form-input"
                         >
                             <option value="General">General</option>
                             <option value="OBC">OBC</option>
@@ -210,7 +201,7 @@ function ApplyContent() {
                         </select>
                     </div>
                 </div>
-            </motion.div>
+            </div>
 
             {/* Members list */}
             <form onSubmit={handleSubmit}>
@@ -232,58 +223,50 @@ function ApplyContent() {
 
                 {/* Add member button */}
                 {members.length < MAX_MEMBERS && (
-                    <motion.button
+                    <button
                         type="button"
                         onClick={addMember}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className="mt-4 w-full flex items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 py-4 text-sm text-slate-500 hover:border-indigo-500/40 hover:text-indigo-400 transition-all"
+                        className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all"
+                        style={{ border: '1.5px dashed var(--border-strong)', color: 'var(--text-secondary)', background: 'transparent' }}
                     >
-                        <UserPlus className="h-4 w-4" />
+                        <UserPlus size={16} />
                         Add Family Member ({members.length}/{MAX_MEMBERS})
-                    </motion.button>
+                    </button>
                 )}
 
                 {members.length >= MAX_MEMBERS && (
-                    <p className="mt-3 text-center text-xs text-slate-600">
+                    <p className="mt-3 text-center text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                         Maximum of {MAX_MEMBERS} members reached.
                     </p>
                 )}
 
-                {/* Submit error */}
                 {submitError && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 flex items-start gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
-                    >
-                        <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <div className="alert alert-error mt-4">
+                        <AlertCircle size={16} className="shrink-0" />
                         {submitError}
-                    </motion.div>
+                    </div>
                 )}
 
-                {/* Submit button */}
-                <motion.button
+                <button
                     type="submit"
                     disabled={!canSubmit}
-                    whileHover={canSubmit ? { scale: 1.01 } : {}}
-                    whileTap={canSubmit ? { scale: 0.99 } : {}}
-                    className="mt-6 w-full flex items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 py-4 font-semibold text-white hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-base shadow-lg shadow-indigo-500/20"
+                    className="btn-primary mt-6 w-full justify-center py-3.5 text-base"
                 >
                     {submitting
-                        ? <><Loader2 className="h-5 w-5 animate-spin" /> Submitting…</>
-                        : <><Send className="h-5 w-5" /> Submit Family Registration</>
+                        ? <><Loader2 size={18} className="animate-spin" /> Submitting…</>
+                        : <><Send size={18} /> Submit Family Registration</>
                     }
-                </motion.button>
+                </button>
 
                 {!canSubmit && !submitting && (
-                    <p className="mt-2 text-center text-xs text-slate-600">
+                    <p className="mt-2 text-center text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                         {!headVerified
                             ? 'Verify the Head of Family\'s Aadhaar to enable submission'
                             : 'Fill all required fields to continue'}
                     </p>
                 )}
             </form>
+        </div>
         </div>
     );
 }
