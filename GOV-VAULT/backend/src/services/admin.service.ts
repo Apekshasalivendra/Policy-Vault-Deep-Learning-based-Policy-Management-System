@@ -169,7 +169,7 @@ export const listPendingClaims = async () => {
     return prisma.claim.findMany({
         where: { status: ClaimStatus.PENDING },
         include: {
-            member: { select: { id: true, name: true, age: true, occupation: true } },
+            member: { select: { id: true, nameAsInAadhaar: true, age: true, occupation: true } },
             family: { select: { id: true, temporaryFamilyId: true } },
         },
         orderBy: { createdAt: 'asc' },

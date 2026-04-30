@@ -88,7 +88,7 @@ export const getMyClaims = async (userId: string) => {
         },
         include: {
             member: {
-                select: { id: true, name: true, age: true, occupation: true },
+                select: { id: true, nameAsInAadhaar: true, age: true, occupation: true },
             },
             family: {
                 select: { id: true, temporaryFamilyId: true, status: true },

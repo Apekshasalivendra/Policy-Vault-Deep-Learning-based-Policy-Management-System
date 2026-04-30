@@ -71,3 +71,11 @@ export const getMe = async (userId: string) => {
     }
     return user;
 };
+
+// ── Get By Email ──────────────────────────────────────────────────────────────
+export const getUserByEmail = async (email: string) => {
+    return prisma.user.findUnique({
+        where: { email },
+        select: { id: true, email: true, role: true, createdAt: true },
+    });
+};
