@@ -105,15 +105,20 @@ export const createFamily = async (
         }
     }
 
-    // 5. Cross-family fraud check — compare hashes against existing DB records
+    // 5. Cross-family fraud check — Aadhaar can be in at most 3 families, PAN in at most 1
     const aadhaarHashes = [...aadhaarSet];
     const panHashes = [...panSet];
+    const MAX_FAMILIES_PER_AADHAAR = 3;
 
-    const existingByAadhaar = await prisma.familyMember.findFirst({
-        where: { aadhaarHash: { in: aadhaarHashes } },
-    });
-    if (existingByAadhaar) {
-        throw new Error('One or more Aadhaar numbers are already registered in another family');
+    for (const aadhaarHash of aadhaarHashes) {
+        const aadhaarFamilyCount = await prisma.familyMember.count({
+            where: { aadhaarHash },
+        });
+        if (aadhaarFamilyCount >= MAX_FAMILIES_PER_AADHAAR) {
+            throw new Error(
+                `One or more Aadhaar numbers are already registered in ${MAX_FAMILIES_PER_AADHAAR} families (maximum allowed)`
+            );
+        }
     }
 
     if (panHashes.length > 0) {

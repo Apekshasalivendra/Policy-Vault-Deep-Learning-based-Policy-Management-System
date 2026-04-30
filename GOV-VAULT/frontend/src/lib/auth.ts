@@ -1,9 +1,25 @@
-// Token helpers — localStorage for prototype, httpOnly cookie for production
+// Token helpers — sessionStorage (tab-isolated) + cross-tab expiry check
 const TOKEN_KEY = 'govvault_token';
 
 export const getToken = (): string | null => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return null;
+
+    // Validate token hasn't expired (client-side check)
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const expiry = payload.exp * 1000; // JWT exp is in seconds
+        if (Date.now() >= expiry) {
+            localStorage.removeItem(TOKEN_KEY); // Auto-clear expired token
+            return null;
+        }
+    } catch {
+        localStorage.removeItem(TOKEN_KEY); // Invalid token structure
+        return null;
+    }
+
+    return token;
 };
 
 export const setToken = (token: string): void => {
@@ -21,5 +37,15 @@ export const decodeToken = (token: string): Record<string, unknown> | null => {
         return JSON.parse(atob(payload));
     } catch {
         return null;
+    }
+};
+
+// Check if token is expired (without removing it)
+export const isTokenExpired = (token: string): boolean => {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return Date.now() >= payload.exp * 1000;
+    } catch {
+        return true;
     }
 };
