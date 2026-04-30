@@ -56,7 +56,7 @@ export const verifyOtp = (email: string, otp: string): boolean => {
 };
 
 export const sendMockDocumentRequestEmail = async (email: string, familyId: string): Promise<void> => {
-    const uploadLink = `http://localhost:3001/upload-documents/${familyId}`;
+    const uploadLink = `${process.env.FRONTEND_URL || 'https://frontend-six-omega-72.vercel.app'}/upload-documents/${familyId}`;
     
     const mailOptions = {
         from: 'GOV-VAULT Admin <saigowtham05peddinti@gmail.com>',
