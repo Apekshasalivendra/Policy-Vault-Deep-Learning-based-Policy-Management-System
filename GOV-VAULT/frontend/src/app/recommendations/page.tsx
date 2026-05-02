@@ -50,55 +50,55 @@ function SchemeCard({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.07 }}
-            className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[var(--gov-blue)] hover:shadow-md transition-all"
+            className="flex flex-col rounded-2xl border-2 border-slate-100 bg-white p-6 shadow-sm hover:border-[var(--gov-blue)] hover:shadow-md transition-all"
         >
             {/* Header */}
             <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100">
-                    <FileText className="h-4 w-4 text-indigo-600" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-100">
+                    <FileText className="h-5 w-5 text-[var(--gov-blue)]" />
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-medium text-indigo-700 border border-indigo-200 ml-auto">
+                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-black text-indigo-800 border border-indigo-200 ml-auto uppercase tracking-tighter">
                     <Sparkles className="h-3 w-3" /> AI Recommended
                 </span>
             </div>
 
             {/* Scheme Name */}
-            <h3 className="mb-1.5 text-base font-semibold text-slate-900 leading-snug">
+            <h3 className="mb-1.5 text-lg font-black text-slate-900 leading-tight">
                 {scheme.schemeName}
             </h3>
 
             {/* Scheme ID */}
-            <p className="mb-4 font-mono text-[11px] text-slate-500 tracking-wide">
-                {scheme.schemeId}
+            <p className="mb-4 font-mono text-[10px] text-slate-500 font-bold tracking-widest uppercase">
+                ID: {scheme.schemeId}
             </p>
 
             {/* Benefit */}
-            <div className="mb-3">
-                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Benefit</p>
-                <p className="text-sm text-slate-700 font-medium leading-relaxed">{scheme.benefitSummary}</p>
+            <div className="mb-4">
+                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Primary Benefit</p>
+                <p className="text-sm text-slate-800 font-bold leading-relaxed">{scheme.benefitSummary}</p>
             </div>
 
             {/* Eligibility */}
-            <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-                    <CheckCircle className="h-3 w-3" /> Why you qualify
+            <div className="mb-6 rounded-xl border-2 border-emerald-100 bg-emerald-50/50 px-4 py-3">
+                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                    <CheckCircle className="h-3.5 w-3.5" /> Eligibility Match
                 </div>
-                <p className="text-sm text-emerald-800 font-medium leading-relaxed">{scheme.eligibilityReason}</p>
+                <p className="text-sm text-emerald-900 font-bold leading-relaxed">{scheme.eligibilityReason}</p>
             </div>
 
             {/* Footer */}
-            <div className="mt-auto flex items-center justify-between">
-                <p className="flex items-center gap-1.5 text-[11px] text-slate-600">
-                    <Clock className="h-3 w-3" />
+            <div className="mt-auto flex items-center justify-between border-t border-slate-50 pt-4">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                    <Clock className="h-3.5 w-3.5" />
                     {new Date(scheme.recommendedAt).toLocaleDateString('en-IN', {
                         day: '2-digit', month: 'short', year: 'numeric',
                     })}
                 </p>
                 <button
                     onClick={() => router.push(`/claim?schemeId=${encodeURIComponent(scheme.schemeId)}`)}
-                    className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-500 transition-all shadow-sm shadow-indigo-500/10"
+                    className="flex items-center gap-1.5 rounded-xl bg-[var(--gov-blue)] px-5 py-2.5 text-xs font-black text-white hover:brightness-110 transition-all shadow-lg shadow-blue-100"
                 >
-                    Apply for this Scheme
+                    APPLY NOW
                     <ChevronRight className="h-3.5 w-3.5" />
                 </button>
             </div>
@@ -111,12 +111,12 @@ function StateView({ state }: { state: PageState }) {
     // Loading family
     if (state.kind === 'loading-family' || state.kind === 'loading-recs') {
         return (
-            <div className="flex flex-col items-center justify-center gap-4 py-24">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
-                <p className="text-sm text-slate-500">
+            <div className="flex flex-col items-center justify-center gap-5 py-24">
+                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+                <p className="text-sm font-black text-slate-600 uppercase tracking-widest">
                     {state.kind === 'loading-family'
                         ? 'Checking family registration…'
-                        : 'Generating personalized recommendations…'}
+                        : 'AI is matching schemes to your profile…'}
                 </p>
             </div>
         );
@@ -125,19 +125,19 @@ function StateView({ state }: { state: PageState }) {
     // No family registered
     if (state.kind === 'no-family') {
         return (
-            <div className="flex flex-col items-center gap-4 py-16 text-center">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <Users className="h-8 w-8 text-slate-400 mx-auto" />
+            <div className="flex flex-col items-center gap-5 py-16 text-center">
+                <div className="rounded-2xl border-2 border-slate-100 bg-white p-6 shadow-sm">
+                    <Users className="h-10 w-10 text-slate-300 mx-auto" />
                 </div>
-                <p className="text-base font-bold text-slate-900">No family registered</p>
-                <p className="text-sm text-slate-600 max-w-xs font-medium">
+                <p className="text-xl font-black text-slate-900">No family registered</p>
+                <p className="text-base text-slate-600 max-w-xs font-bold">
                     Register your family first to access personalized scheme recommendations.
                 </p>
                 <Link
                     href="/apply"
-                    className="rounded-xl bg-[var(--gov-blue)] px-5 py-2.5 text-sm font-bold text-white hover:brightness-110 transition-all shadow-sm"
+                    className="mt-2 rounded-xl bg-[var(--gov-blue)] px-7 py-3.5 text-base font-black text-white hover:brightness-110 transition-all shadow-xl shadow-blue-100"
                 >
-                    Register Family
+                    Register Family Now
                 </Link>
             </div>
         );
@@ -146,21 +146,21 @@ function StateView({ state }: { state: PageState }) {
     // Family not approved
     if (state.kind === 'not-approved') {
         return (
-            <div className="flex flex-col items-center gap-4 py-16 text-center">
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-                    <ShieldAlert className="h-8 w-8 text-amber-500 mx-auto" />
+            <div className="flex flex-col items-center gap-5 py-16 text-center">
+                <div className="rounded-2xl border-2 border-amber-100 bg-amber-50 p-6 shadow-sm">
+                    <ShieldAlert className="h-10 w-10 text-amber-500 mx-auto" />
                 </div>
-                <p className="text-base font-bold text-slate-900">Family not yet approved</p>
-                <p className="text-sm text-slate-600 max-w-sm font-medium">
+                <p className="text-xl font-black text-slate-900">Family not yet approved</p>
+                <p className="text-base text-slate-700 max-w-sm font-bold">
                     Your family registration is currently{' '}
-                    <span className={`font-bold ${state.status === 'REJECTED' ? 'text-red-600' : 'text-amber-600'}`}>
-                        {state.status.toLowerCase()}
+                    <span className={`font-black uppercase px-2 py-0.5 rounded ${state.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {state.status}
                     </span>
                     . Personalized recommendations are only available once an administrator approves your family.
                 </p>
                 <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 shadow-sm hover:border-[var(--gov-blue)] hover:text-[var(--gov-blue)] transition-all"
+                    className="flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-700 shadow-sm hover:border-[var(--gov-blue)] hover:text-[var(--gov-blue)] transition-all"
                 >
                     <ArrowLeft className="h-4 w-4" /> Back to Dashboard
                 </Link>
@@ -171,13 +171,13 @@ function StateView({ state }: { state: PageState }) {
     // AI service unavailable
     if (state.kind === 'unavailable') {
         return (
-            <div className="flex flex-col items-center gap-4 py-16 text-center">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
-                    <WifiOff className="h-8 w-8 text-red-500 mx-auto" />
+            <div className="flex flex-col items-center gap-5 py-16 text-center">
+                <div className="rounded-2xl border-2 border-red-100 bg-red-50 p-6 shadow-sm">
+                    <WifiOff className="h-10 w-10 text-red-500 mx-auto" />
                 </div>
-                <p className="text-base font-bold text-slate-900">Recommendation engine unavailable</p>
-                <p className="text-sm text-slate-600 max-w-sm font-medium">{state.message}</p>
-                <p className="text-xs font-bold text-slate-500">Please try again in a few minutes.</p>
+                <p className="text-xl font-black text-slate-900">Recommendation engine unavailable</p>
+                <p className="text-base text-slate-700 max-w-sm font-bold">{state.message}</p>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Please try again in a few minutes.</p>
             </div>
         );
     }
@@ -185,12 +185,12 @@ function StateView({ state }: { state: PageState }) {
     // Error
     if (state.kind === 'error') {
         return (
-            <div className="flex flex-col items-center gap-4 py-16 text-center">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
-                    <AlertCircle className="h-8 w-8 text-red-500 mx-auto" />
+            <div className="flex flex-col items-center gap-5 py-16 text-center">
+                <div className="rounded-2xl border-2 border-red-100 bg-red-50 p-6 shadow-sm">
+                    <AlertCircle className="h-10 w-10 text-red-500 mx-auto" />
                 </div>
-                <p className="text-base font-bold text-slate-900">Something went wrong</p>
-                <p className="text-sm text-slate-600 max-w-xs font-medium">{state.message}</p>
+                <p className="text-xl font-black text-slate-900">Something went wrong</p>
+                <p className="text-base text-slate-700 max-w-xs font-bold">{state.message}</p>
             </div>
         );
     }
@@ -203,39 +203,39 @@ function StateView({ state }: { state: PageState }) {
                 <motion.div
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3 shadow-sm"
+                    className="mb-8 flex flex-wrap items-center gap-5 rounded-2xl border-2 border-slate-100 bg-white px-6 py-4 shadow-sm"
                 >
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-                        <Users className="h-4 w-4 text-[var(--gov-blue)]" />
-                        Family ID:
-                        <span className="font-mono text-[var(--gov-blue)] font-bold">{state.family.temporaryFamilyId}</span>
+                    <div className="flex items-center gap-2 text-sm font-black text-slate-700">
+                        <Users className="h-5 w-5 text-indigo-600" />
+                        FAMILY ID:
+                        <span className="font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded tracking-tighter">{state.family.temporaryFamilyId}</span>
                     </div>
-                    <span className="text-slate-300">|</span>
-                    <div className="text-sm font-medium text-slate-600">
-                        {state.family.memberCount} member{state.family.memberCount !== 1 ? 's' : ''}
+                    <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+                    <div className="text-sm font-black text-slate-700">
+                        {state.family.memberCount} REGISTERED MEMBER{state.family.memberCount !== 1 ? 'S' : ''}
                     </div>
-                    <span className="text-slate-300">|</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
-                        <CheckCircle className="h-3 w-3" /> Approved
+                    <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800 border border-emerald-200">
+                        <CheckCircle className="h-3.5 w-3.5" /> ACCOUNT APPROVED
                     </span>
-                    <div className="ml-auto text-xs font-bold text-slate-500">
-                        {state.schemes.length} scheme{state.schemes.length !== 1 ? 's' : ''} found
+                    <div className="ml-auto text-xs font-black text-slate-500 uppercase tracking-widest">
+                        {state.schemes.length} Result{state.schemes.length !== 1 ? 's' : ''}
                     </div>
                 </motion.div>
 
                 {/* Schemes Grid */}
                 {state.schemes.length === 0 ? (
-                    <div className="flex flex-col items-center gap-3 py-16 text-center">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                            <FileText className="h-7 w-7 text-slate-400 mx-auto" />
+                    <div className="flex flex-col items-center gap-4 py-20 text-center">
+                        <div className="rounded-2xl border-2 border-slate-100 bg-white p-7 shadow-sm">
+                            <FileText className="h-10 w-10 text-slate-200 mx-auto" />
                         </div>
-                        <p className="text-base font-bold text-[var(--gov-blue)]">No matching schemes found</p>
-                        <p className="text-sm text-slate-600 max-w-xs font-medium">
+                        <p className="text-xl font-black text-[var(--gov-blue)]">No matching schemes found</p>
+                        <p className="text-base text-slate-600 max-w-sm font-bold">
                             Our AI could not find schemes matching your current profile. Check back as new schemes are added regularly.
                         </p>
                     </div>
                 ) : (
-                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         <AnimatePresence>
                             {state.schemes.map((scheme, i) => (
                                 <SchemeCard key={scheme.schemeId} scheme={scheme} index={i} />
@@ -330,18 +330,18 @@ function RecommendationsContent() {
             >
                 <Link
                     href="/dashboard"
-                    className="mb-4 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors w-fit"
+                    className="mb-5 flex items-center gap-2 text-sm font-black text-slate-500 hover:text-indigo-600 transition-colors w-fit uppercase tracking-widest"
                 >
-                    <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
+                    <ArrowLeft className="h-4 w-4" /> Back to Dashboard
                 </Link>
-                <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 shadow-sm">
-                        <Sparkles className="h-6 w-6 text-[var(--gov-blue)]" />
+                <div className="flex items-center gap-5">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 border-2 border-blue-100 shadow-sm shadow-blue-100">
+                        <Sparkles className="h-8 w-8 text-[var(--gov-blue)]" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black text-[var(--gov-blue)]">Personalized Policy Recommendations</h1>
-                        <p className="text-sm font-medium text-slate-600 mt-0.5">
-                            AI-curated government welfare schemes matched to your family profile
+                        <h1 className="text-3xl font-black text-[var(--gov-blue)] tracking-tight">Scheme Saathi AI</h1>
+                        <p className="text-base font-bold text-slate-700 mt-0.5">
+                            Personalized Welfare Matching Engine
                         </p>
                     </div>
                 </div>

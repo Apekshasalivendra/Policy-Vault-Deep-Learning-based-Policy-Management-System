@@ -98,77 +98,77 @@ function AdminFamiliesContent() {
                         initial={{ opacity: 0, y: -16 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className={`fixed top-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-xl backdrop-blur ${toast.kind === 'success'
-                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                : 'border-red-200 bg-red-50 text-red-700'
+                        className={`fixed top-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border-2 px-6 py-4 text-sm font-black shadow-2xl backdrop-blur ${toast.kind === 'success'
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                : 'border-red-200 bg-red-50 text-red-800'
                             }`}
                     >
                         {toast.kind === 'success'
-                            ? <CheckCircle className="h-5 w-5" />
-                            : <AlertCircle className="h-5 w-5" />}
+                            ? <CheckCircle className="h-6 w-6" />
+                            : <AlertCircle className="h-6 w-6" />}
                         {toast.message}
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* Header */}
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 border-b border-slate-200 pb-6">
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-10 border-b-2 border-slate-200 pb-8">
                 <Link
                     href="/admin"
-                    className="mb-4 flex w-fit items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
+                    className="mb-5 flex w-fit items-center gap-2 text-sm font-black text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest"
                 >
                     <ArrowLeft className="h-4 w-4" /> Admin Dashboard
                 </Link>
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 shadow-sm">
-                            <Users className="h-6 w-6 text-amber-600" />
+                <div className="flex flex-wrap items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 border-2 border-amber-100 shadow-sm shadow-amber-50">
+                            <Users className="h-8 w-8 text-amber-600" />
                         </div>
                         <div>
                             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Family Approval Queue</h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Review and approve pending family registrations</p>
+                            <p className="text-base font-bold text-slate-700 mt-1">Review and process pending family onboardings</p>
                         </div>
                     </div>
                     <button
                         onClick={loadFamilies}
-                        className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                        className="flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-800 hover:bg-slate-50 transition-all shadow-sm"
                     >
-                        <RefreshCw className="h-4 w-4" /> Refresh
+                        <RefreshCw className="h-4 w-4" /> REFRESH QUEUE
                     </button>
                 </div>
             </motion.div>
 
             {/* Table */}
             {loading ? (
-                <div className="flex items-center justify-center gap-3 py-20 text-[var(--gov-blue)]">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                    <span className="text-sm font-bold">Loading families…</span>
+                <div className="flex flex-col items-center justify-center gap-5 py-24 text-indigo-600">
+                    <Loader2 className="h-10 w-10 animate-spin" />
+                    <span className="text-base font-black uppercase tracking-widest">Fetching Queue Data…</span>
                 </div>
             ) : error ? (
-                <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-600 shadow-sm">
-                    <AlertCircle className="h-5 w-5 shrink-0" /> {error}
+                <div className="flex items-center gap-4 rounded-2xl border-2 border-red-100 bg-red-50 px-6 py-5 text-base font-bold text-red-700 shadow-sm">
+                    <AlertCircle className="h-6 w-6 shrink-0" /> {error}
                 </div>
             ) : families.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex flex-col items-center gap-4 py-20 text-center rounded-xl border border-slate-200 bg-white shadow-sm"
+                    className="flex flex-col items-center gap-5 py-24 text-center rounded-2xl border-2 border-slate-100 bg-white shadow-sm"
                 >
-                    <div className="rounded-full bg-slate-100 p-5 shadow-sm border border-slate-200">
-                        <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto" />
+                    <div className="rounded-full bg-slate-50 p-6 shadow-sm border border-slate-100">
+                        <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
                     </div>
                     <div>
-                        <p className="text-lg font-bold text-slate-900 mb-1">Queue is empty!</p>
-                        <p className="text-sm font-medium text-slate-500">No families are currently awaiting approval.</p>
+                        <p className="text-xl font-black text-slate-900 mb-1">Approval Queue is Empty</p>
+                        <p className="text-base font-bold text-slate-600">No families are currently awaiting verification.</p>
                     </div>
                 </motion.div>
             ) : (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-hidden rounded-2xl border-2 border-slate-100 bg-white shadow-md">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                                {['Family ID', 'Submitted By', 'Members', 'Submitted On', 'Actions'].map((h, i) => (
-                                    <th key={h} className={`py-4 text-xs font-bold uppercase tracking-wider text-slate-500 ${i === 0 ? 'pl-6 pr-4' : 'px-4'}`}>
+                            <tr className="border-b-2 border-slate-100 bg-slate-50/50 text-left">
+                                {['Family ID', 'Submitted By', 'Onboarding Status', 'Date', 'Operations'].map((h, i) => (
+                                    <th key={h} className={`py-5 text-xs font-black uppercase tracking-widest text-slate-600 ${i === 0 ? 'pl-8 pr-5' : 'px-5'}`}>
                                         {h}
                                     </th>
                                 ))}
@@ -183,28 +183,28 @@ function AdminFamiliesContent() {
                                         <motion.tr
                                             key={f.id}
                                             exit={{ opacity: 0, height: 0 }}
-                                            className="hover:bg-slate-50 transition-colors"
+                                            className="hover:bg-slate-50/80 transition-colors"
                                         >
                                             {/* Family ID */}
-                                            <td className="pl-6 pr-4 py-5">
-                                                <p className="font-mono text-sm font-bold text-[var(--gov-blue)]">{f.temporaryFamilyId}</p>
-                                                <p className="text-xs font-medium text-slate-500 mt-1 font-mono">UUID: {f.id.slice(0, 8)}…</p>
+                                            <td className="pl-8 pr-5 py-6">
+                                                <p className="font-mono text-base font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded w-fit mb-1.5">{f.temporaryFamilyId}</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">UUID: {f.id.slice(0, 12)}…</p>
                                             </td>
 
                                             {/* Email */}
-                                            <td className="px-4 py-5 font-medium text-slate-700">{f.createdBy.email}</td>
+                                            <td className="px-5 py-6 font-black text-slate-800">{f.createdBy.email}</td>
 
                                             {/* Member count */}
-                                            <td className="px-4 py-5">
-                                                <span className="inline-flex items-center gap-1.5 rounded-sm bg-slate-100 border border-slate-200 px-2.5 py-1 text-[11px] font-bold uppercase text-slate-600">
-                                                    <Users className="h-3 w-3" /> {f._count.members} Members
+                                            <td className="px-5 py-6">
+                                                <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 border-2 border-slate-200 px-3 py-1.5 text-[11px] font-black uppercase text-slate-700">
+                                                    <Users className="h-4 w-4" /> {f._count.members} Members
                                                 </span>
                                             </td>
 
                                             {/* Date */}
-                                            <td className="px-4 py-5">
-                                                <p className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                                                    <Clock className="h-3.5 w-3.5" />
+                                            <td className="px-5 py-6">
+                                                <p className="flex items-center gap-2 text-xs font-black text-slate-600">
+                                                    <Clock className="h-4 w-4 text-slate-400" />
                                                     {new Date(f.createdAt).toLocaleDateString('en-IN', {
                                                         day: '2-digit', month: 'short', year: 'numeric',
                                                     })}
@@ -212,67 +212,67 @@ function AdminFamiliesContent() {
                                             </td>
 
                                             {/* Actions */}
-                                            <td className="px-4 py-5">
-                                                <div className="flex flex-col gap-2">
+                                            <td className="px-5 py-6">
+                                                <div className="flex flex-col gap-2.5">
                                                     <div className="flex items-center gap-3">
                                                         <button
                                                             onClick={() => handleAction(f.id, 'approving')}
                                                             disabled={!!action}
-                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl bg-emerald-600 border-2 border-emerald-700 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-100 transition-all"
                                                         >
                                                             {isActing && action.type === 'approving' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                                                            Approve
+                                                            APPROVE
                                                         </button>
                                                         <button
                                                             onClick={() => handleAction(f.id, 'rejecting')}
                                                             disabled={!!action}
-                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl bg-red-50 border-2 border-red-200 px-4 py-2.5 text-xs font-black text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
                                                         >
                                                             {isActing && action.type === 'rejecting' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                                                            Reject
+                                                            REJECT
                                                         </button>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <button
                                                             onClick={() => handleAction(f.id, 'requesting_docs')}
                                                             disabled={!!action}
-                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl bg-indigo-50 border-2 border-indigo-200 px-4 py-2.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
                                                         >
                                                             {isActing && action.type === 'requesting_docs' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
-                                                            Request Docs
+                                                            DOCS REQ
                                                         </button>
                                                         <button
                                                             onClick={() => toggleExpand(f.id)}
-                                                            className="flex flex-1 justify-center items-center gap-1.5 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all"
+                                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-black text-white hover:bg-slate-800 transition-all shadow-lg"
                                                         >
-                                                            {expandedFamilyId === f.id ? 'Hide Details' : 'View Details'}
+                                                            {expandedFamilyId === f.id ? 'HIDE' : 'VIEW DETAILS'}
                                                         </button>
                                                     </div>
                                                 </div>
                                             </td>
                                         </motion.tr>
                                         {expandedFamilyId === f.id && (
-                                            <tr className="bg-slate-50 border-b border-slate-200">
-                                                <td colSpan={5} className="p-6">
-                                                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                                                        <h3 className="text-sm font-bold text-slate-800 mb-4">Family Members</h3>
-                                                        <div className="grid gap-4 md:grid-cols-2">
+                                            <tr className="bg-slate-50/50 border-b-2 border-slate-100">
+                                                <td colSpan={5} className="p-8">
+                                                    <div className="rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-inner">
+                                                        <h3 className="text-sm font-black text-slate-900 mb-5 uppercase tracking-widest">Registered Family Members</h3>
+                                                        <div className="grid gap-5 md:grid-cols-2">
                                                             {f.members?.map((m, idx) => (
-                                                                <div key={m.id} className="rounded-lg border border-slate-100 bg-slate-50 p-4">
-                                                                    <div className="flex items-center justify-between mb-2">
-                                                                        <span className="text-sm font-bold text-slate-900">{m.nameAsInAadhaar}</span>
-                                                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${m.isAadhaarVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                                                                            {m.isAadhaarVerified ? 'Aadhaar Verified' : 'Aadhaar Pending'}
+                                                                <div key={m.id} className="rounded-xl border-2 border-slate-100 bg-slate-50/50 p-5">
+                                                                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                                                                        <span className="text-base font-black text-slate-900">{m.nameAsInAadhaar}</span>
+                                                                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 ${m.isAadhaarVerified ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-red-100 text-red-800 border-red-200'}`}>
+                                                                            {m.isAadhaarVerified ? 'Verified' : 'Pending'}
                                                                         </span>
                                                                     </div>
-                                                                    <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs text-slate-600 mt-3">
-                                                                        <div><span className="text-slate-400">Phone:</span> {m.phoneAsInAadhaar}</div>
-                                                                        <div><span className="text-slate-400">Age:</span> {m.age}</div>
-                                                                        <div><span className="text-slate-400">Gender:</span> {m.gender}</div>
-                                                                        <div><span className="text-slate-400">Religion:</span> {m.religion}</div>
-                                                                        <div><span className="text-slate-400">Disabled:</span> {m.physicallyDisabled ? 'Yes' : 'No'}</div>
-                                                                        <div><span className="text-slate-400">Occupation:</span> {m.occupation}</div>
-                                                                        <div className="col-span-2"><span className="text-slate-400">Income:</span> {m.incomeRange}</div>
+                                                                    <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-[11px] font-bold text-slate-700">
+                                                                        <div><span className="text-slate-400 uppercase tracking-tighter block mb-0.5">Phone</span> {m.phoneAsInAadhaar}</div>
+                                                                        <div><span className="text-slate-400 uppercase tracking-tighter block mb-0.5">Age</span> {m.age}</div>
+                                                                        <div><span className="text-slate-400 uppercase tracking-tighter block mb-0.5">Gender</span> {m.gender}</div>
+                                                                        <div><span className="text-slate-400 uppercase tracking-tighter block mb-0.5">Religion</span> {m.religion}</div>
+                                                                        <div><span className="text-slate-400 uppercase tracking-tighter block mb-0.5">Disability</span> {m.physicallyDisabled ? 'YES' : 'NO'}</div>
+                                                                        <div><span className="text-slate-400 uppercase tracking-tighter block mb-0.5">Occupation</span> {m.occupation}</div>
+                                                                        <div className="col-span-2 mt-1 py-2 px-3 bg-white rounded border border-slate-100"><span className="text-slate-400 uppercase tracking-tighter block mb-0.5">Income Bracket</span> {m.incomeRange}</div>
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -287,8 +287,8 @@ function AdminFamiliesContent() {
                             </AnimatePresence>
                         </tbody>
                     </table>
-                    <div className="border-t border-slate-200 bg-slate-50 px-6 py-4 text-xs font-medium text-slate-500">
-                        {families.length} family registration{families.length !== 1 ? 's' : ''} pending approval
+                    <div className="border-t-2 border-slate-100 bg-slate-50/50 px-8 py-5 text-xs font-black text-slate-600 uppercase tracking-widest">
+                        Total {families.length} pending onboarding request{families.length !== 1 ? 's' : ''}
                     </div>
                 </motion.div>
             )}

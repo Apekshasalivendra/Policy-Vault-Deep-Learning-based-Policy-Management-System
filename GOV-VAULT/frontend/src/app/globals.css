@@ -20,21 +20,26 @@
   --border-strong:   #b0bbc7;
 
   /* Text */
-  --text-primary:    #0f1923;
-  --text-secondary:  #3d5166;
-  --text-muted:      #6b8198;
+  --text-primary:    #0a141d; /* Darker for better contrast */
+  --text-secondary:  #2d3e50; /* Much darker than before */
+  --text-muted:      #4b5e71; /* Visible even as 'muted' */
   --text-inverse:    #ffffff;
 
   /* Status */
-  --success:         #16a34a;
-  --success-bg:      #dcfce7;
-  --warning:         #b45309;
-  --warning-bg:      #fef3c7;
-  --danger:          #dc2626;
-  --danger-bg:       #fee2e2;
-  --info:            #1d6fb5;
-  --info-bg:         #dbeafe;
+  --success:         #15803d;
+  --success-bg:      #f0fdf4;
+  --warning:         #92400e;
+  --warning-bg:      #fffbeb;
+  --danger:          #b91c1c;
+  --danger-bg:       #fef2f2;
+  --info:            #0369a1;
+  --info-bg:         #f0f9ff;
 }
+
+/* ── Global Contrast Overwrites ── */
+.text-slate-400 { color: #475569 !important; }
+.text-slate-500 { color: #334155 !important; }
+.text-slate-600 { color: #1e293b !important; }
 
 /* ── Base ── */
 *, *::before, *::after { box-sizing: border-box; }
@@ -42,13 +47,14 @@
 html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
-  background-color: var(--bg-page);
+  background-color: #f8fafc; /* Lighter background to make cards stand out */
   color: var(--text-primary);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
 }
+
 
 /* ── Typography ── */
 h1, h2, h3, h4, h5, h6 {

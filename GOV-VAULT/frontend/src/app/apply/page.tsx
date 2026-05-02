@@ -83,26 +83,27 @@ function ApplyContent() {
     // ── Success Screen ────────────────────────────────────────────────────────────
     if (success) {
         return (
-            <div style={{ background: 'var(--bg-page)', minHeight: 'calc(100vh - 68px)' }}
-                className="flex items-center justify-center px-4">
-                <div className="card-elevated w-full max-w-lg p-10 text-center" style={{ borderTop: '4px solid #16a34a' }}>
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
-                        style={{ background: '#dcfce7', border: '2px solid #86efac' }}>
-                        <CheckCircle size={40} style={{ color: '#16a34a' }} />
+            <div className="flex items-center justify-center px-4" style={{ background: '#f8fafc', minHeight: 'calc(100vh - 68px)' }}>
+                <div className="card-elevated w-full max-w-lg p-10 text-center bg-white" style={{ borderTop: '6px solid #16a34a' }}>
+                    <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 border-4 border-emerald-100">
+                        <CheckCircle size={48} className="text-emerald-600" />
                     </div>
-                    <h2 className="mb-2 text-2xl font-black" style={{ color: 'var(--gov-blue)' }}>Registration Submitted!</h2>
-                    <p className="mb-6 font-medium" style={{ color: 'var(--text-secondary)' }}>Your family registration is under review by an administrator.</p>
-                    <div className="mb-6 rounded-xl p-5" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
-                        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Temporary Family ID</p>
-                        <p className="text-2xl font-mono font-black tracking-widest" style={{ color: 'var(--gov-blue)' }}>
+                    <h2 className="mb-3 text-3xl font-black" style={{ color: 'var(--gov-blue)' }}>Submission Successful</h2>
+                    <p className="mb-8 font-bold text-slate-700">Your family registration is now pending official review.</p>
+                    
+                    <div className="mb-8 rounded-2xl p-6 bg-slate-50 border-2 border-slate-100">
+                        <p className="text-xs font-black uppercase tracking-widest mb-2 text-slate-600">Temporary Family ID</p>
+                        <p className="text-3xl font-mono font-black tracking-widest" style={{ color: 'var(--gov-blue)' }}>
                             {success.temporaryFamilyId}
                         </p>
                     </div>
-                    <div className="badge badge-pending mx-auto mb-6">
-                        <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--warning)' }} />
-                        Status: {success.status}
+
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="badge px-6 py-3 bg-yellow-100 border-2 border-yellow-200 text-yellow-800 font-black rounded-full text-sm">
+                            STATUS: {success.status.toUpperCase()}
+                        </div>
+                        <p className="text-sm font-bold text-slate-600 animate-pulse">Redirecting to dashboard in 4 seconds…</p>
                     </div>
-                    <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Redirecting to dashboard in 4 seconds…</p>
                 </div>
             </div>
         );
@@ -112,161 +113,158 @@ function ApplyContent() {
     const verifiedCount = members.filter((m) => m.aadhaarStatus === 'verified').length;
 
     return (
-        <div style={{ background: 'var(--bg-page)', minHeight: 'calc(100vh - 68px)' }}>
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-            {/* Page header */}
-            <div className="mb-6 pb-5" style={{ borderBottom: '1.5px solid var(--border)' }}>
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl"
-                        style={{ background: '#e8f0f8', color: 'var(--gov-blue)' }}>
-                        <Users size={20} />
+        <div style={{ background: '#f8fafc', minHeight: 'calc(100vh - 68px)' }}>
+            <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+                {/* Page header */}
+                <div className="mb-8 pb-6 border-b-2 border-slate-200">
+                    <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
+                            <Users size={28} />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--gov-blue)' }}>Family Registration</h1>
+                            <p className="text-base font-bold text-slate-700">Official Onboarding for Government Welfare Services</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-black" style={{ color: 'var(--gov-blue)' }}>Family Registration</h1>
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Register your family for government welfare schemes</p>
+
+                    {/* Progress Card */}
+                    <div className="mt-8 rounded-2xl p-6 bg-white border-2 border-slate-100 shadow-sm">
+                        <div className="flex items-center justify-between text-sm font-black mb-3 text-slate-800">
+                            <span className="uppercase tracking-tight">Registration Progress</span>
+                            <span className="text-indigo-700">{verifiedCount} / {members.length} VERIFIED</span>
+                        </div>
+                        <div className="h-3 w-full rounded-full bg-slate-100 overflow-hidden">
+                            <div className="h-full transition-all duration-700 ease-out"
+                                style={{ width: `${members.length > 0 ? (verifiedCount / members.length) * 100 : 0}%`, background: 'linear-gradient(90deg, #16a34a, #22c55e)' }} />
+                        </div>
+                        <div className="mt-4 flex items-center justify-between">
+                            <p className="text-xs font-bold text-slate-700">
+                                {members.length} Member{members.length !== 1 ? 's' : ''} added
+                            </p>
+                            {!headVerified && (
+                                <p className="flex items-center gap-1.5 text-xs font-black text-red-600 animate-pulse">
+                                    <AlertCircle size={14} />
+                                    HEAD OF FAMILY VERIFICATION REQUIRED
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Global Context Selection */}
+                    <div className="grid grid-cols-2 gap-6 mt-8">
+                        <div className="space-y-2">
+                            <label className="block text-xs font-black uppercase tracking-widest text-slate-600">Primary Residence (State) *</label>
+                            <select 
+                                value={state} 
+                                onChange={(e) => setState(e.target.value)}
+                                className="form-input bg-white font-bold h-12"
+                                style={{ color: 'var(--text-primary)' }}
+                            >
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                <option value="Assam">Assam</option>
+                                <option value="Bihar">Bihar</option>
+                                <option value="Chhattisgarh">Chhattisgarh</option>
+                                <option value="Goa">Goa</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                <option value="Jharkhand">Jharkhand</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Kerala">Kerala</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Manipur">Manipur</option>
+                                <option value="Meghalaya">Meghalaya</option>
+                                <option value="Mizoram">Mizoram</option>
+                                <option value="Nagaland">Nagaland</option>
+                                <option value="Odisha">Odisha</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Sikkim">Sikkim</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="Telangana">Telangana</option>
+                                <option value="Tripura">Tripura</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Uttarakhand">Uttarakhand</option>
+                                <option value="West Bengal">West Bengal</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block text-xs font-black uppercase tracking-widest text-slate-600">Caste / Category *</label>
+                            <select 
+                                value={category} 
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="form-input bg-white font-bold h-12"
+                                style={{ color: 'var(--text-primary)' }}
+                            >
+                                <option value="General">General</option>
+                                <option value="OBC">OBC</option>
+                                <option value="SC">SC</option>
+                                <option value="ST">ST</option>
+                                <option value="EWS">EWS</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                {/* Progress bar */}
-                <div className="mt-5 rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                    <div className="flex items-center justify-between text-xs font-semibold mb-2"
-                        style={{ color: 'var(--text-secondary)' }}>
-                        <span>{members.length} member{members.length !== 1 ? 's' : ''} added (max {MAX_MEMBERS})</span>
-                        <span>{verifiedCount} / {members.length} Aadhaar verified</span>
+                {/* Members list */}
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-6">
+                        <AnimatePresence mode="popLayout">
+                            {members.map((member, i) => (
+                                <MemberCard
+                                    key={i}
+                                    index={i}
+                                    member={member}
+                                    isHead={i === 0}
+                                    canRemove={members.length > 1}
+                                    onChange={(updated) => updateMember(i, updated)}
+                                    onRemove={() => removeMember(i)}
+                                />
+                            ))}
+                        </AnimatePresence>
                     </div>
-                    <div className="h-2 w-full rounded-full" style={{ background: 'var(--bg-hover)' }}>
-                        <div className="h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${members.length > 0 ? (verifiedCount / members.length) * 100 : 0}%`, background: '#16a34a' }} />
-                    </div>
-                    {!headVerified && (
-                        <p className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold"
-                            style={{ color: 'var(--warning)' }}>
-                            <AlertCircle size={13} />
-                            The first member (Head of Family) must have their Aadhaar verified to submit.
+
+                    {/* Add member button */}
+                    {members.length < MAX_MEMBERS && (
+                        <button
+                            type="button"
+                            onClick={addMember}
+                            className="mt-6 w-full flex items-center justify-center gap-3 rounded-2xl py-5 text-sm font-black transition-all border-2 border-dashed border-slate-300 bg-slate-50 text-slate-700 hover:bg-white hover:border-indigo-400 hover:text-indigo-600"
+                        >
+                            <UserPlus size={20} />
+                            ADD FAMILY MEMBER ({members.length}/{MAX_MEMBERS})
+                        </button>
+                    )}
+
+                    {submitError && (
+                        <div className="mt-6 p-4 rounded-xl bg-red-50 border-2 border-red-100 flex items-center gap-3 text-red-700 font-bold">
+                            <AlertCircle size={20} className="shrink-0" />
+                            {submitError}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={!canSubmit}
+                        className="btn-primary mt-8 w-full justify-center py-4 text-lg font-black shadow-xl shadow-indigo-100"
+                    >
+                        {submitting
+                            ? <><Loader2 size={24} className="animate-spin" /> PROCESSING…</>
+                            : <><Send size={20} /> SUBMIT OFFICIAL REGISTRATION</>
+                        }
+                    </button>
+
+                    {!canSubmit && !submitting && (
+                        <p className="mt-4 text-center text-sm font-black uppercase tracking-tight text-slate-700">
+                            {!headVerified
+                                ? '⚠️ Verification of Head of Family required to proceed'
+                                : 'Please complete all required fields'}
                         </p>
                     )}
-                </div>
-
-                {/* State & Category Selection */}
-                <div className="grid grid-cols-2 gap-4 mt-5">
-                    <div>
-                        <label className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Current State *</label>
-                        <select 
-                            value={state} 
-                            onChange={(e) => setState(e.target.value)}
-                            className="form-input"
-                        >
-                            <option value="Andhra Pradesh">Andhra Pradesh</option>
-                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                            <option value="Assam">Assam</option>
-                            <option value="Bihar">Bihar</option>
-                            <option value="Chhattisgarh">Chhattisgarh</option>
-                            <option value="Goa">Goa</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Haryana">Haryana</option>
-                            <option value="Himachal Pradesh">Himachal Pradesh</option>
-                            <option value="Jharkhand">Jharkhand</option>
-                            <option value="Karnataka">Karnataka</option>
-                            <option value="Kerala">Kerala</option>
-                            <option value="Madhya Pradesh">Madhya Pradesh</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Manipur">Manipur</option>
-                            <option value="Meghalaya">Meghalaya</option>
-                            <option value="Mizoram">Mizoram</option>
-                            <option value="Nagaland">Nagaland</option>
-                            <option value="Odisha">Odisha</option>
-                            <option value="Punjab">Punjab</option>
-                            <option value="Rajasthan">Rajasthan</option>
-                            <option value="Sikkim">Sikkim</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                            <option value="Telangana">Telangana</option>
-                            <option value="Tripura">Tripura</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Uttarakhand">Uttarakhand</option>
-                            <option value="West Bengal">West Bengal</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Caste Category *</label>
-                        <select 
-                            value={category} 
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="form-input"
-                        >
-                            <option value="General">General</option>
-                            <option value="OBC">OBC</option>
-                            <option value="SC">SC</option>
-                            <option value="ST">ST</option>
-                            <option value="EWS">EWS</option>
-                        </select>
-                    </div>
-                </div>
+                </form>
             </div>
-
-            {/* Members list */}
-            <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
-                    <AnimatePresence mode="popLayout">
-                        {members.map((member, i) => (
-                            <MemberCard
-                                key={i}
-                                index={i}
-                                member={member}
-                                isHead={i === 0}
-                                canRemove={members.length > 1}
-                                onChange={(updated) => updateMember(i, updated)}
-                                onRemove={() => removeMember(i)}
-                            />
-                        ))}
-                    </AnimatePresence>
-                </div>
-
-                {/* Add member button */}
-                {members.length < MAX_MEMBERS && (
-                    <button
-                        type="button"
-                        onClick={addMember}
-                        className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all"
-                        style={{ border: '1.5px dashed var(--border-strong)', color: 'var(--text-secondary)', background: 'transparent' }}
-                    >
-                        <UserPlus size={16} />
-                        Add Family Member ({members.length}/{MAX_MEMBERS})
-                    </button>
-                )}
-
-                {members.length >= MAX_MEMBERS && (
-                    <p className="mt-3 text-center text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                        Maximum of {MAX_MEMBERS} members reached.
-                    </p>
-                )}
-
-                {submitError && (
-                    <div className="alert alert-error mt-4">
-                        <AlertCircle size={16} className="shrink-0" />
-                        {submitError}
-                    </div>
-                )}
-
-                <button
-                    type="submit"
-                    disabled={!canSubmit}
-                    className="btn-primary mt-6 w-full justify-center py-3.5 text-base"
-                >
-                    {submitting
-                        ? <><Loader2 size={18} className="animate-spin" /> Submitting…</>
-                        : <><Send size={18} /> Submit Family Registration</>
-                    }
-                </button>
-
-                {!canSubmit && !submitting && (
-                    <p className="mt-2 text-center text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                        {!headVerified
-                            ? 'Verify the Head of Family\'s Aadhaar to enable submission'
-                            : 'Fill all required fields to continue'}
-                    </p>
-                )}
-            </form>
-        </div>
         </div>
     );
 }

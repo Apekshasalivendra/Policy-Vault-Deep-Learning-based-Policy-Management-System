@@ -110,26 +110,29 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className={`glass-card rounded-2xl overflow-hidden border transition-all ${verified ? 'border-emerald-500/30' : 'border-white/8'
-                }`}
+            className={`rounded-2xl overflow-hidden border transition-all shadow-sm ${
+                verified ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'
+            }`}
         >
             {/* Card Header */}
             <div
                 className="flex items-center justify-between px-5 py-4 cursor-pointer select-none"
                 onClick={() => setExpanded((p) => !p)}
+                style={{ background: verified ? 'rgba(16, 185, 129, 0.05)' : 'rgba(248, 250, 252, 0.8)' }}
             >
                 <div className="flex items-center gap-3">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${verified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-600/20 text-indigo-400'
-                        }`}>
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${
+                        verified ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white'
+                    }`}>
                         {verified ? <CheckCircle className="h-4 w-4" /> : index + 1}
                     </div>
                     <div>
-                        <p className="font-medium text-white text-sm">
+                        <p className="font-extrabold text-sm uppercase tracking-tight" style={{ color: 'var(--gov-blue)' }}>
                             {member.data.nameAsInAadhaar || `Member ${index + 1}`}
-                            {isHead && <span className="ml-2 text-xs text-indigo-400 font-normal">(Head of Family)</span>}
+                            {isHead && <span className="ml-2 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">(HEAD)</span>}
                         </p>
-                        <p className="text-xs text-slate-500">
-                            {verified ? 'Aadhaar verified ✓' : 'Aadhaar not verified'}
+                        <p className="text-[11px] font-bold mt-0.5" style={{ color: verified ? 'var(--success)' : 'var(--text-muted)' }}>
+                            {verified ? '✓ Aadhaar Verified' : '⚠ Aadhaar verification required'}
                         </p>
                     </div>
                 </div>
@@ -137,13 +140,13 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                     {canRemove && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
                             title="Remove member"
                         >
                             <Trash2 className="h-4 w-4" />
                         </button>
                     )}
-                    {expanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
+                    {expanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </div>
             </div>
 
@@ -154,15 +157,15 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="border-t border-white/5"
+                        transition={{ duration: 0.2 }}
+                        className="border-t border-slate-100"
                     >
                         <div className="grid gap-4 p-5 sm:grid-cols-2">
                             {/* Name */}
                             <InputField icon={<User className="h-4 w-4" />} label="Name as in Aadhaar" required>
                                 <input
                                     type="text" value={member.data.nameAsInAadhaar} onChange={(e) => update('nameAsInAadhaar', e.target.value)}
-                                    placeholder="e.g. Priya Nair" className={inputClass}
+                                    placeholder="e.g. Priya Nair" className="form-input"
                                 />
                             </InputField>
 
@@ -170,7 +173,7 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                             <InputField icon={<Phone className="h-4 w-4" />} label="Phone as in Aadhaar" required>
                                 <input
                                     type="tel" maxLength={10} value={member.data.phoneAsInAadhaar} onChange={(e) => update('phoneAsInAadhaar', e.target.value.replace(/\D/g, ''))}
-                                    placeholder="10-digit mobile number" className={inputClass}
+                                    placeholder="10-digit mobile number" className="form-input"
                                 />
                             </InputField>
 
@@ -179,11 +182,11 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                                 <InputField icon={<Calendar className="h-4 w-4" />} label="Age" required>
                                     <input
                                         type="number" min={0} max={120} value={member.data.age} onChange={(e) => update('age', e.target.value)}
-                                        placeholder="Age in years" className={inputClass}
+                                        placeholder="Age" className="form-input"
                                     />
                                 </InputField>
                                 <InputField icon={<User className="h-4 w-4" />} label="Gender" required>
-                                    <select value={member.data.gender} onChange={(e) => update('gender', e.target.value)} className={inputClass}>
+                                    <select value={member.data.gender} onChange={(e) => update('gender', e.target.value)} className="form-input">
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                         <option value="Other">Other</option>
@@ -196,11 +199,11 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                                 <InputField icon={<Briefcase className="h-4 w-4" />} label="Occupation" required>
                                     <input
                                         type="text" value={member.data.occupation} onChange={(e) => update('occupation', e.target.value)}
-                                        placeholder="e.g. Farmer" className={inputClass}
+                                        placeholder="e.g. Farmer" className="form-input"
                                     />
                                 </InputField>
                                 <InputField icon={<User className="h-4 w-4" />} label="Religion" required>
-                                    <select value={member.data.religion} onChange={(e) => update('religion', e.target.value)} className={inputClass}>
+                                    <select value={member.data.religion} onChange={(e) => update('religion', e.target.value)} className="form-input">
                                         <option value="Hindu">Hindu</option>
                                         <option value="Muslim">Muslim</option>
                                         <option value="Christian">Christian</option>
@@ -215,15 +218,15 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                             {/* Income Range & Disability */}
                             <div className="grid grid-cols-2 gap-4">
                                 <InputField icon={<DollarSign className="h-4 w-4" />} label="Income Range" required>
-                                    <select value={member.data.incomeRange} onChange={(e) => update('incomeRange', e.target.value)} className={inputClass}>
-                                        <option value="">Select income range</option>
+                                    <select value={member.data.incomeRange} onChange={(e) => update('incomeRange', e.target.value)} className="form-input">
+                                        <option value="">Select range</option>
                                         {INCOME_RANGES.map((r) => <option key={r} value={r}>{r}</option>)}
                                     </select>
                                 </InputField>
-                                <InputField icon={<ShieldCheck className="h-4 w-4" />} label="Disability Status" required>
-                                    <select value={member.data.physicallyDisabled ? 'true' : 'false'} onChange={(e) => update('physicallyDisabled', e.target.value === 'true' ? true as any : false as any)} className={inputClass}>
+                                <InputField icon={<ShieldCheck className="h-4 w-4" />} label="Disability" required>
+                                    <select value={member.data.physicallyDisabled ? 'true' : 'false'} onChange={(e) => update('physicallyDisabled', e.target.value === 'true' ? true as any : false as any)} className="form-input">
                                         <option value="false">Not Disabled</option>
-                                        <option value="true">Physically Disabled</option>
+                                        <option value="true">Disabled</option>
                                     </select>
                                 </InputField>
                             </div>
@@ -234,62 +237,64 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                                     <input
                                         type="text" maxLength={12} value={member.data.aadhaar}
                                         onChange={(e) => update('aadhaar', e.target.value.replace(/\D/g, ''))}
-                                        placeholder="12-digit Aadhaar number"
+                                        placeholder="12-digit number"
                                         disabled={member.aadhaarStatus === 'verified'}
-                                        className={`${inputClass} flex-1`}
+                                        className="form-input flex-1"
                                     />
                                     {member.aadhaarStatus !== 'verified' && (
                                         <button
                                             type="button"
                                             onClick={handleVerifyAadhaar}
                                             disabled={member.aadhaarStatus === 'sending' || member.data.aadhaar.length !== 12}
-                                            className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-all flex items-center gap-2"
+                                            className="btn-primary px-4 py-2 text-sm"
                                         >
                                             {member.aadhaarStatus === 'sending' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                             {member.aadhaarStatus === 'sending' ? 'Sending…' : 'Verify'}
                                         </button>
                                     )}
                                     {member.aadhaarStatus === 'verified' && (
-                                        <div className="flex items-center gap-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-4 text-sm text-emerald-400">
+                                        <div className="flex items-center gap-1.5 rounded-xl bg-emerald-100 border border-emerald-200 px-4 text-sm font-bold text-emerald-700">
                                             <CheckCircle className="h-4 w-4" /> Verified
                                         </div>
                                     )}
                                 </div>
 
-                                {/* OTP entry — dev mode shows OTP hint */}
+                                {/* OTP entry */}
                                 {(member.aadhaarStatus === 'otp_sent' || member.aadhaarStatus === 'confirming') && (
-                                    <div className="mt-2 flex gap-2">
-                                        <div className="flex-1">
-                                            <input
-                                                type="text" maxLength={6} value={member.aadhaarOtp}
-                                                onChange={(e) => onChange({ ...member, aadhaarOtp: e.target.value.replace(/\D/g, '') })}
-                                                placeholder="Enter 6-digit OTP"
-                                                className={inputClass}
-                                            />
-                                            {member.aadhaarDevOtp && (
-                                                <p className="mt-1 text-xs text-amber-500/80">
-                                                    🧪 Dev OTP: <span className="font-mono font-bold">{member.aadhaarDevOtp}</span>
-                                                </p>
-                                            )}
+                                    <div className="mt-3 rounded-xl p-4" style={{ background: 'rgba(234, 179, 8, 0.08)', border: '1px solid rgba(234, 179, 8, 0.3)' }}>
+                                        <p className="text-xs font-bold text-yellow-800 mb-2 uppercase tracking-tight">Enter OTP sent to linked mobile</p>
+                                        <div className="flex gap-2">
+                                            <div className="flex-1">
+                                                <input
+                                                    type="text" maxLength={6} value={member.aadhaarOtp}
+                                                    onChange={(e) => onChange({ ...member, aadhaarOtp: e.target.value.replace(/\D/g, '') })}
+                                                    placeholder="6 digits"
+                                                    className="form-input bg-white"
+                                                />
+                                                {member.aadhaarDevOtp && (
+                                                    <p className="mt-2 text-xs font-bold text-yellow-700">
+                                                        TEST MODE OTP: <span className="bg-yellow-200 px-1.5 py-0.5 rounded font-mono">{member.aadhaarDevOtp}</span>
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleConfirmAadhaar}
+                                                disabled={member.aadhaarStatus === 'confirming' || member.aadhaarOtp.length !== 6}
+                                                className="bg-emerald-600 text-white rounded-xl px-4 py-2 text-sm font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
+                                            >
+                                                {member.aadhaarStatus === 'confirming' ? 'Confirming…' : 'Confirm'}
+                                            </button>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={handleConfirmAadhaar}
-                                            disabled={member.aadhaarStatus === 'confirming' || member.aadhaarOtp.length !== 6}
-                                            className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-all flex items-center gap-2"
-                                        >
-                                            {member.aadhaarStatus === 'confirming' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                                            {member.aadhaarStatus === 'confirming' ? 'Confirming…' : 'Confirm OTP'}
-                                        </button>
                                     </div>
                                 )}
                                 {member.aadhaarError && (
-                                    <p className="mt-1.5 text-xs text-red-400">{member.aadhaarError}</p>
+                                    <p className="mt-2 text-xs font-bold text-red-600">{member.aadhaarError}</p>
                                 )}
                             </InputField>
 
                             {/* PAN */}
-                            <InputField icon={<CreditCard className="h-4 w-4" />} label="PAN (optional)" className="sm:col-span-2">
+                            <InputField icon={<CreditCard className="h-4 w-4" />} label="PAN (Optional)" className="sm:col-span-2">
                                 <div className="flex gap-2">
                                     <input
                                         type="text" maxLength={10} value={member.data.pan}
@@ -297,28 +302,28 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                                             update('pan', e.target.value.toUpperCase());
                                             if (member.panStatus !== 'idle') onChange({ ...member, data: { ...member.data, pan: e.target.value.toUpperCase() }, panStatus: 'idle', panMessage: '' });
                                         }}
-                                        placeholder="e.g. ABCDE1234F"
-                                        className={`${inputClass} flex-1`}
+                                        placeholder="ABCDE1234F"
+                                        className="form-input flex-1"
                                     />
                                     {member.data.pan && member.panStatus !== 'valid' && (
                                         <button
                                             type="button"
                                             onClick={handleVerifyPan}
                                             disabled={member.panStatus === 'checking' || member.data.pan.length < 10}
-                                            className="shrink-0 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 hover:border-indigo-500/40 hover:text-indigo-300 disabled:opacity-50 transition-all flex items-center gap-2"
+                                            className="px-4 py-2 text-sm font-bold border-2 border-slate-200 rounded-xl hover:border-gov-gold hover:text-gov-gold transition-all disabled:opacity-50"
+                                            style={{ color: 'var(--gov-blue)' }}
                                         >
-                                            {member.panStatus === 'checking' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                                            {member.panStatus === 'checking' ? 'Checking…' : 'Validate'}
+                                            {member.panStatus === 'checking' ? 'Validating…' : 'Validate'}
                                         </button>
                                     )}
                                     {member.panStatus === 'valid' && (
-                                        <div className="flex items-center gap-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-4 text-sm text-emerald-400">
+                                        <div className="flex items-center gap-1.5 rounded-xl bg-emerald-100 border border-emerald-200 px-4 text-sm font-bold text-emerald-700">
                                             <CheckCircle className="h-4 w-4" /> Valid
                                         </div>
                                     )}
                                 </div>
                                 {member.panMessage && (
-                                    <p className={`mt-1 text-xs ${member.panStatus === 'valid' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <p className={`mt-1.5 text-xs font-bold ${member.panStatus === 'valid' ? 'text-emerald-600' : 'text-red-600'}`}>
                                         {member.panMessage}
                                     </p>
                                 )}
@@ -332,20 +337,18 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const inputClass =
-    'w-full rounded-xl border border-white/10 bg-white/5 py-2.5 px-3 text-sm text-white placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed';
-
 function InputField({
     icon, label, required, children, className = '',
 }: { icon: React.ReactNode; label: string; required?: boolean; children: React.ReactNode; className?: string }) {
     return (
         <div className={className}>
-            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                <span className="text-slate-500">{icon}</span>
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-tight" style={{ color: 'var(--text-secondary)' }}>
+                <span style={{ color: 'var(--gov-gold)' }}>{icon}</span>
                 {label}
-                {required && <span className="text-red-400">*</span>}
+                {required && <span className="text-red-600 ml-0.5">*</span>}
             </label>
             {children}
         </div>
     );
 }
+
