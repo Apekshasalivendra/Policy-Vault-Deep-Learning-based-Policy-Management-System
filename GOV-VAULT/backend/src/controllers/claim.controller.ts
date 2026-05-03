@@ -36,3 +36,17 @@ export const getMyClaims = async (req: Request, res: Response): Promise<void> =>
         res.status(500).json({ error: message });
     }
 };
+
+// ── GET /claim/:id ─────────────────────────────────────────────────────────────
+export const getClaimById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const { id } = req.params;
+        const claim = await claimService.getClaimById(userId, id);
+        res.json({ claim });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Claim not found';
+        const status = message.includes('not found') || message.includes('denied') ? 404 : 500;
+        res.status(status).json({ error: message });
+    }
+};

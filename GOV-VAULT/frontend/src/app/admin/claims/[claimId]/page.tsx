@@ -251,15 +251,15 @@ function AdminClaimDetailsContent({ claimId }: { claimId: string }) {
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
                                 {claim.documents.map(doc => (
-                                    <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50 shadow-sm">
+                                    <a key={doc.id} href={`http://localhost:3003/${doc.filePath}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50 shadow-sm hover:border-indigo-300 transition-colors">
                                         <div className="bg-indigo-100 border border-indigo-200 p-2 rounded-md shrink-0">
                                             <FileText className="h-4 w-4 text-indigo-600" />
                                         </div>
                                         <div className="overflow-hidden">
-                                            <p className="text-xs font-bold text-slate-900 truncate">{doc.documentType.replace(/_/g, ' ')}</p>
+                                            <p className="text-xs font-bold text-indigo-700 truncate hover:underline">{doc.documentType.replace(/_/g, ' ')}</p>
                                             <p className="text-[10px] font-medium text-slate-500 mt-0.5">{new Date(doc.uploadedAt).toLocaleString('en-IN')}</p>
                                         </div>
-                                    </div>
+                                    </a>
                                 ))}
                             </div>
                         )}

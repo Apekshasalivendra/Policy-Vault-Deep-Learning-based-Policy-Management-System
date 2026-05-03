@@ -4,7 +4,7 @@ import { getToken } from './auth';
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
     headers: { 'Content-Type': 'application/json' },
-    timeout: 10000,
+    timeout: 120000,
 });
 
 // Request interceptor — attach JWT token to every request automatically
@@ -24,7 +24,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401 && !isAuthRequest) {
             // Clear stale token and redirect to login
             if (typeof window !== 'undefined') {
-                localStorage.removeItem('govvault_token');
+                sessionStorage.removeItem('govvault_token');
                 window.location.href = '/login';
             }
         }
@@ -49,6 +49,11 @@ export const familyApi = {
             '/family/create',
             { members, aadhaarVerificationToken, state, category }
         ),
+    update: (members: unknown[], aadhaarVerificationToken?: string) =>
+        api.put<{ family: { temporaryFamilyId: string; status: string } }>(
+            '/family/update',
+            { members, aadhaarVerificationToken }
+        ),
 };
 
 
@@ -57,6 +62,7 @@ export const claimApi = {
     getMyClaims: () => api.get('/claim/my'),
     initiateClaim: (memberId: string, schemeId: string) =>
         api.post('/claim/initiate', { memberId, schemeId }),
+    getClaimById: (id: string) => api.get(`/claim/${id}`),
 };
 
 // ── Entitlements endpoints (Gateway Phase 4 & 5) ─────────────────────────────
@@ -75,6 +81,8 @@ export const entitlementApi = {
         api.post('/entitlements/claims/submit', { claimId }),
     getTimeline: (claimId: string) =>
         api.get(`/entitlements/claims/timeline/${claimId}`),
+    kycSubmitClaim: (claimId: string, kycMethod: string, claimType: string) =>
+        api.post('/entitlements/claims/kyc-submit', { claimId, kycMethod, claimType }),
 
     // --- Phase 6 Admin Domain Extensions ---
     adminGetSubmitted: () =>
@@ -128,8 +136,30 @@ export const adminApi = {
     getPendingClaims: () => api.get('/admin/claims/pending'),
     approveClaim: (id: string) => api.post(`/admin/claim/${id}/approve`),
     rejectClaim: (id: string) => api.post(`/admin/claim/${id}/reject`),
+    getPendingPolicyClaims: () => api.get('/admin/policy-claims/pending'),
+    approvePolicyClaim: (id: string) => api.post(`/admin/policy-claim/${id}/approve`),
+    rejectPolicyClaim: (id: string) => api.post(`/admin/policy-claim/${id}/reject`),
+    requestPolicyDocs: (id: string) => api.post(`/admin/policy-claim/${id}/request-docs`),
     getAnalytics: () => api.get('/admin/analytics/recommendations'),
     getAuditLogs: () => api.get('/admin/audit-logs'),
+    getFamilyDocuments: (id: string) => api.get(`/api/families/${id}/documents`),
+    getOrphans: () => api.get('/admin/orphans'),
+    registerOrphan: (data: any) => api.post('/admin/orphans', data),
+    verifyOrphan: (id: string, status: string) => api.post(`/admin/orphans/${id}/verify`, { status }),
+    deductOrphanFund: (id: string, data: any) => api.post(`/admin/orphans/${id}/deduct-fee`, data),
+};
+
+// ── Policies endpoints (mock family policies) ─────────────────────────────────
+export const policyApi = {
+    getForFamily: (familyId: string) => api.get(`/policies/family/${familyId}`),
+    submitClaim: (familyId: string, data: {
+        policyId: string;
+        policyName: string;
+        memberId: string;
+        memberName: string;
+        percentage: number;
+        nominees: unknown[];
+    }) => api.post(`/policies/family/${familyId}/claim`, data),
 };
 
 export default api;

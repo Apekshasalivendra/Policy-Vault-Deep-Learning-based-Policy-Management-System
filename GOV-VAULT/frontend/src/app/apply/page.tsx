@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Users, Send, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
@@ -23,6 +23,48 @@ function ApplyContent() {
     const [success, setSuccess] = useState<SuccessData | null>(null);
     const [state, setState] = useState('Andhra Pradesh');
     const [category, setCategory] = useState('General');
+    const [isUpdateMode, setIsUpdateMode] = useState(false);
+    const [originalMemberCount, setOriginalMemberCount] = useState(0);
+
+    // ── Fetch Existing Family ──────────────────────────────────────────────────
+
+    useEffect(() => {
+        familyApi.getMyFamily().then(res => {
+            const family = (res.data as any).family;
+            if (family && family.members && family.members.length > 0) {
+                setIsUpdateMode(true);
+                setOriginalMemberCount(family.members.length);
+                setState(family.state || 'Andhra Pradesh');
+                setCategory(family.category || 'General');
+                
+                // Map existing members to MemberState format
+                const mappedMembers: MemberState[] = family.members.map((m: any) => ({
+                    data: {
+                        nameAsInAadhaar: m.nameAsInAadhaar || '',
+                        phoneAsInAadhaar: m.phoneAsInAadhaar || '',
+                        aadhaar: m.aadhaar || '',
+                        pan: m.pan || '',
+                        incomeRange: m.incomeRange || '',
+                        occupation: m.occupation || '',
+                        age: m.age ? String(m.age) : '',
+                        gender: m.gender || 'Male',
+                        religion: m.religion || 'Hindu',
+                        physicallyDisabled: !!m.physicallyDisabled
+                    },
+                    aadhaarStatus: 'verified', // Pre-verified if fetched from db
+                    aadhaarOtp: '',
+                    aadhaarDevOtp: '',
+                    aadhaarError: '',
+                    verificationToken: '',
+                    panStatus: m.pan ? 'valid' : 'idle',
+                    panMessage: ''
+                }));
+                setMembers(mappedMembers);
+            }
+        }).catch(() => {
+            // No family found, ignore
+        });
+    }, []);
 
     // ── Member management ────────────────────────────────────────────────────────
     const addMember = () => {
@@ -41,7 +83,11 @@ function ApplyContent() {
     const allRequired = members.every((m) =>
         m.data.nameAsInAadhaar && m.data.phoneAsInAadhaar && m.data.aadhaar && m.data.incomeRange && m.data.occupation && m.data.age
     );
-    const canSubmit = headVerified && allRequired && !submitting;
+    // In update mode: existing members are pre-verified, only NEW members need Aadhaar verification
+    const newMembersVerified = isUpdateMode
+        ? members.slice(originalMemberCount).every(m => m.aadhaarStatus === 'verified')
+        : headVerified;
+    const canSubmit = headVerified && allRequired && newMembersVerified && !submitting;
 
     // ── Submit ───────────────────────────────────────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +110,15 @@ function ApplyContent() {
                 physicallyDisabled: m.data.physicallyDisabled,
             }));
 
-            const res = await familyApi.create(payload, members[0].verificationToken, state, category);
+            let res;
+            if (isUpdateMode) {
+                // In update mode, use the new member's token if there is one, otherwise pass empty
+                const newMemberToken = members.slice(originalMemberCount).find(m => m.verificationToken)?.verificationToken || '';
+                res = await familyApi.update(payload, newMemberToken);
+            } else {
+                res = await familyApi.create(payload, members[0].verificationToken, state, category);
+            }
+
             const { temporaryFamilyId, status } = res.data.family;
             setSuccess({ temporaryFamilyId, status });
 
@@ -88,8 +142,8 @@ function ApplyContent() {
                     <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 border-4 border-emerald-100">
                         <CheckCircle size={48} className="text-emerald-600" />
                     </div>
-                    <h2 className="mb-3 text-3xl font-black" style={{ color: 'var(--gov-blue)' }}>Submission Successful</h2>
-                    <p className="mb-8 font-bold text-slate-700">Your family registration is now pending official review.</p>
+                    <h2 className="mb-3 text-3xl font-black" style={{ color: 'var(--gov-blue)' }}>{isUpdateMode ? 'Members Updated!' : 'Submission Successful'}</h2>
+                    <p className="mb-8 font-bold text-slate-700">{isUpdateMode ? 'New family members have been added and are pending admin review.' : 'Your family registration is now pending official review.'}</p>
                     
                     <div className="mb-8 rounded-2xl p-6 bg-slate-50 border-2 border-slate-100">
                         <p className="text-xs font-black uppercase tracking-widest mb-2 text-slate-600">Temporary Family ID</p>
@@ -122,8 +176,8 @@ function ApplyContent() {
                             <Users size={28} />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--gov-blue)' }}>Family Registration</h1>
-                            <p className="text-base font-bold text-slate-700">Official Onboarding for Government Welfare Services</p>
+                            <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--gov-blue)' }}>{isUpdateMode ? 'Add Family Members' : 'Family Registration'}</h1>
+                            <p className="text-base font-bold text-slate-700">{isUpdateMode ? `${originalMemberCount} existing member(s) shown below. Add new members and submit.` : 'Official Onboarding for Government Welfare Services'}</p>
                         </div>
                     </div>
 
@@ -218,7 +272,8 @@ function ApplyContent() {
                                     index={i}
                                     member={member}
                                     isHead={i === 0}
-                                    canRemove={members.length > 1}
+                                    canRemove={isUpdateMode ? i >= originalMemberCount : members.length > 1}
+                                    isReadOnly={isUpdateMode && i < originalMemberCount}
                                     onChange={(updated) => updateMember(i, updated)}
                                     onRemove={() => removeMember(i)}
                                 />

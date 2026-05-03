@@ -30,6 +30,7 @@ export const recommend = async (req: Request, res: Response): Promise<void> => {
             age: primary.age,
             gender: req.body?.gender || 'Male',
             category: req.body?.category || familyCategory,
+            religion: primary.religion,
             familySize: family.memberCount,
         };
 

@@ -99,3 +99,37 @@ export const getMyClaims = async (userId: string) => {
 
     return claims;
 };
+
+// ── Get Single Claim ──────────────────────────────────────────────────────────
+export const getClaimById = async (userId: string, claimId: string) => {
+    const claim = await prisma.claim.findFirst({
+        where: {
+            id: claimId,
+            family: { createdById: userId },
+        },
+        include: {
+            member: {
+                select: {
+                    id: true,
+                    nameAsInAadhaar: true,
+                    age: true,
+                    occupation: true,
+                    incomeRange: true,
+                    gender: true,
+                    religion: true,
+                }
+            },
+            family: {
+                select: {
+                    id: true,
+                    temporaryFamilyId: true,
+                    status: true,
+                    state: true,
+                    category: true,
+                }
+            },
+        },
+    });
+    if (!claim) throw new Error('Claim not found or access denied');
+    return claim;
+};

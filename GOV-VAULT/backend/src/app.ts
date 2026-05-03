@@ -13,7 +13,10 @@ import recommendationRoutes from './routes/recommendation.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import entitlementRoutes from './routes/entitlement.routes';
 import adminEntitlementRoutes from './routes/admin.entitlement.routes';
+import familyDocsRoutes from './routes/family-docs.routes';
+import path from 'path';
 import notificationRoutes from './routes/notification.routes';
+import policyRoutes from './routes/policy.routes';
 
 const app = express();
 
@@ -32,7 +35,7 @@ app.use(morgan('combined'));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 10000, // Increased for development testing
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
@@ -43,6 +46,9 @@ app.use(limiter);
 app.use(express.json());
 app.use(compression());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files for uploaded documents
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -59,6 +65,8 @@ app.use('/claim', claimRoutes);
 app.use('/recommendations', recommendationRoutes);
 app.use('/entitlements', entitlementRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/policies', policyRoutes);
+app.use('/api', familyDocsRoutes); // Mount BEFORE adminEntitlementRoutes to avoid global verifyToken interception
 app.use(adminEntitlementRoutes);
 
 // ── 404 Handler ──────────────────────────────────────────────────────────────

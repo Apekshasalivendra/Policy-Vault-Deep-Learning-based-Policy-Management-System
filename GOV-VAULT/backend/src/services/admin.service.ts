@@ -1,9 +1,11 @@
 import { PrismaClient, FamilyStatus, ClaimStatus } from '@prisma/client';
 import axios from 'axios';
-import { sendMockDocumentRequestEmail } from './email.service';
+import { sendMockDocumentRequestEmail, sendPolicyDocumentRequestEmail } from './email.service';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
-const ENTITLEMENT_SERVICE_URL = process.env.ENTITLEMENT_SERVICE_URL || 'http://localhost:4000';
+const ENTITLEMENT_SERVICE_URL = process.env.ENTITLEMENT_SERVICE_URL || 'http://entitlement-service:4000';
 
 // ── Register members in the entitlement service (fire-and-forget) ─────────────
 const registerMembersInEntitlementService = async (memberIds: string[]): Promise<void> => {
@@ -70,6 +72,20 @@ export const approveFamily = async (adminId: string, familyId: string) => {
     const memberIds = family.members.map((m) => m.id);
     void registerMembersInEntitlementService(memberIds);
 
+    // EPHEMERAL STORAGE: Delete physical files and DB records for privacy
+    const documents = await prisma.familyDocument.findMany({ where: { familyId } });
+    for (const doc of documents) {
+        try {
+            const absolutePath = path.join(__dirname, '../..', doc.filePath);
+            if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
+        } catch (e) {
+            console.error(`[admin.service] Failed to delete file ${doc.filePath}`, e);
+        }
+    }
+    if (documents.length > 0) {
+        await prisma.familyDocument.deleteMany({ where: { familyId } });
+    }
+
     return updated;
 };
 
@@ -93,6 +109,20 @@ export const rejectFamily = async (adminId: string, familyId: string) => {
         });
         return result;
     });
+
+    // EPHEMERAL STORAGE: Delete physical files and DB records for privacy
+    const documents = await prisma.familyDocument.findMany({ where: { familyId } });
+    for (const doc of documents) {
+        try {
+            const absolutePath = path.join(__dirname, '../..', doc.filePath);
+            if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
+        } catch (e) {
+            console.error(`[admin.service] Failed to delete file ${doc.filePath}`, e);
+        }
+    }
+    if (documents.length > 0) {
+        await prisma.familyDocument.deleteMany({ where: { familyId } });
+    }
 
     return updated;
 };
@@ -164,24 +194,104 @@ export const getDashboardMetrics = async () => {
     };
 };
 
-// ── List Pending Claims ───────────────────────────────────────────────────────
+// ── List Pending Scheme Claims ────────────────────────────────────────────────
 export const listPendingClaims = async () => {
     return prisma.claim.findMany({
-        where: { status: ClaimStatus.PENDING },
+        where: { status: ClaimStatus.PENDING, category: 'SCHEME' },
         include: {
-            member: { select: { id: true, nameAsInAadhaar: true, age: true, occupation: true } },
-            family: { select: { id: true, temporaryFamilyId: true } },
+            member: {
+                select: {
+                    id: true,
+                    nameAsInAadhaar: true,
+                    age: true,
+                    occupation: true,
+                    incomeRange: true,
+                    gender: true,
+                    religion: true,
+                    physicallyDisabled: true,
+                }
+            },
+            family: {
+                select: {
+                    id: true,
+                    temporaryFamilyId: true,
+                    state: true,
+                    category: true,
+                    createdBy: { select: { email: true } },
+                }
+            },
         },
         orderBy: { createdAt: 'asc' },
     });
 };
 
-// ── Approve Claim ─────────────────────────────────────────────────────────────
+// ── List Pending Policy Claims ────────────────────────────────────────────────
+export const listPendingPolicyClaims = async () => {
+    return prisma.claim.findMany({
+        where: { status: ClaimStatus.PENDING, category: 'POLICY' },
+        include: {
+            member: {
+                select: {
+                    id: true,
+                    nameAsInAadhaar: true,
+                    age: true,
+                    gender: true,
+                    religion: true,
+                }
+            },
+            family: {
+                select: {
+                    id: true,
+                    temporaryFamilyId: true,
+                    createdBy: { select: { email: true } },
+                }
+            },
+        },
+        orderBy: { createdAt: 'asc' },
+    });
+};
+
+// ── Request Policy Claim Documents via Email ───────────────────────────────────
+export const requestPolicyDocs = async (adminId: string, claimId: string) => {
+    const claim = await prisma.claim.findUnique({
+        where: { id: claimId },
+        include: {
+            family: { include: { createdBy: { select: { email: true } } } },
+        },
+    });
+    if (!claim) throw new Error('Claim not found');
+    if (claim.status !== ClaimStatus.PENDING) {
+        throw new Error(`Cannot request docs for claim with status ${claim.status}`);
+    }
+
+    const email = claim.family.createdBy?.email;
+    if (!email) throw new Error('User email not found for this claim');
+
+    const meta = claim.metadata as Record<string, string> | null;
+    const policyName = meta?.policyName ?? 'your policy';
+
+    await sendPolicyDocumentRequestEmail(email, claimId, policyName);
+
+    await prisma.auditLog.create({
+        data: { userId: adminId, action: `POLICY_DOCS_REQUESTED:${claimId}` },
+    });
+
+    return claim;
+};
+
+// ── Approve Claim (with ephemeral doc cleanup) ────────────────────────────────
 export const approveClaim = async (adminId: string, claimId: string) => {
     const claim = await prisma.claim.findUnique({ where: { id: claimId } });
     if (!claim) throw new Error('Claim not found');
     if (claim.status !== ClaimStatus.PENDING) {
         throw new Error(`Claim is already ${claim.status.toLowerCase()}`);
+    }
+
+    // Delete any uploaded policy docs for this claim (ephemeral storage)
+    const claimDocDir = path.join(__dirname, '../..', 'uploads', `claim-${claimId}`);
+    if (fs.existsSync(claimDocDir)) {
+        fs.rmSync(claimDocDir, { recursive: true, force: true });
+        console.log(`[admin.service] Deleted claim docs at ${claimDocDir}`);
     }
 
     return prisma.$transaction(async (tx) => {
@@ -196,12 +306,19 @@ export const approveClaim = async (adminId: string, claimId: string) => {
     });
 };
 
-// ── Reject Claim ──────────────────────────────────────────────────────────────
+// ── Reject Claim (with ephemeral doc cleanup) ─────────────────────────────────
 export const rejectClaim = async (adminId: string, claimId: string) => {
     const claim = await prisma.claim.findUnique({ where: { id: claimId } });
     if (!claim) throw new Error('Claim not found');
     if (claim.status !== ClaimStatus.PENDING) {
         throw new Error(`Claim is already ${claim.status.toLowerCase()}`);
+    }
+
+    // Delete any uploaded policy docs for this claim (ephemeral storage)
+    const claimDocDir = path.join(__dirname, '../..', 'uploads', `claim-${claimId}`);
+    if (fs.existsSync(claimDocDir)) {
+        fs.rmSync(claimDocDir, { recursive: true, force: true });
+        console.log(`[admin.service] Deleted claim docs at ${claimDocDir}`);
     }
 
     return prisma.$transaction(async (tx) => {

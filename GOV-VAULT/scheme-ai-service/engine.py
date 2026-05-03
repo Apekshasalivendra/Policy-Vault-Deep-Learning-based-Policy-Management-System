@@ -98,14 +98,55 @@ class SchemeEngine:
 
         # 3. State filter (same logic as original search_schemes)
         user_state = str(profile.get("state", "")).lower()
-        filtered = [
+        filtered_state = [
             s for s in raw_results
             if user_state == str(s["metadata"].get("state", "")).lower()
             or any(t in str(s["metadata"].get("state", "")).lower()
                    for t in ["all india", "central", "nationwide"])
         ]
+        
+        # 3.5. Hard constraint filter for Religion / Caste
+        user_religion = str(profile.get("religion", "")).lower()
+        user_category = str(profile.get("category", "")).lower()
+        user_caste = str(profile.get("caste", "")).lower()
+
+        # All Hindu-Brahmin specific scheme keywords found in the AP Brahmin Welfare Corp schemes
+        BRAHMIN_SCHEME_KEYWORDS = [
+            "brahmin", "brahmana", "brahmanulu", "brahmin welfare", "andhra brahmin",
+            # AP Brahmin Welfare Corporation scheme series names
+            "bharati scheme", "veda vyasa", "vedavyasa", "kashyapa scheme", "garuda scheme",
+            "parasara scheme", "agastya scheme", "vasishta scheme", "vishwamitra scheme",
+            "bharadwaj scheme", "dronacharya scheme", "sankaracharya scheme",
+            # General upper-caste / forward-caste identifiers
+            "forward caste", "upper caste", "oc community", "fc community",
+            "vedic education", "vedic scholar", "puja", "agrahara",
+            # Hindu-community-only schemes
+            "kapu welfare", "kamma welfare", "reddy welfare", "velama welfare",
+            "naidu welfare", "raju welfare",
+        ]
+
+        # SC/ST specific scheme keywords that should NOT go to General/OBC/OC
+        SC_ST_ONLY_KEYWORDS = []  # SC/ST users CAN see their own schemes
+
+        def is_valid_for_profile(meta):
+            scheme_name = str(meta.get("scheme_name", "")).lower()
+            text = f"{scheme_name} {meta.get('brief_description','')} {meta.get('eligibility_criteria','')} {meta.get('tags','')} {meta.get('category','')}".lower()
+
+            # For non-Hindu religions OR SC/ST category → block all Brahmin/Hindu-exclusive schemes
+            is_minority_religion = user_religion in ["christian", "muslim", "sikh", "buddhist", "jain", "other"]
+            is_sc_st = user_category in ["sc", "st", "scheduled caste", "scheduled tribe"]
+
+            if is_minority_religion or is_sc_st:
+                if any(keyword in text for keyword in BRAHMIN_SCHEME_KEYWORDS):
+                    logger.info(f"Filtered out Brahmin scheme for {user_religion}/{user_category}: {meta.get('scheme_name','?')}")
+                    return False
+
+            return True
+
+        filtered = [s for s in filtered_state if is_valid_for_profile(s["metadata"])]
+
         if not filtered:
-            logger.warning("SchemeEngine: no schemes after state filter")
+            logger.warning("SchemeEngine: no schemes after state and hard filters")
             return []
 
         # 4. LLM reranking

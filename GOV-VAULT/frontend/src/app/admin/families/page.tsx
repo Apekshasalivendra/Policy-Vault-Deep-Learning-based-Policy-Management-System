@@ -41,9 +41,24 @@ function AdminFamiliesContent() {
     const [action, setAction] = useState<ActionState>(null);
     const [toast, setToast] = useState<Toast>(null);
     const [expandedFamilyId, setExpandedFamilyId] = useState<string | null>(null);
+    const [familyDocs, setFamilyDocs] = useState<Record<string, { id: string, fileName: string, filePath: string, uploadedAt: string }[]>>({});
 
-    const toggleExpand = (id: string) => {
-        setExpandedFamilyId((prev) => (prev === id ? null : id));
+    const toggleExpand = async (id: string) => {
+        if (expandedFamilyId === id) {
+            setExpandedFamilyId(null);
+            return;
+        }
+        setExpandedFamilyId(id);
+        
+        // Fetch documents if we haven't already
+        if (!familyDocs[id]) {
+            try {
+                const res = await adminApi.getFamilyDocuments(id);
+                setFamilyDocs(prev => ({ ...prev, [id]: res.data.documents }));
+            } catch (err) {
+                console.error("Failed to load family documents", err);
+            }
+        }
     };
 
     const showToast = (kind: 'success' | 'error', message: string) => {
@@ -277,6 +292,41 @@ function AdminFamiliesContent() {
                                                                 </div>
                                                             ))}
                                                         </div>
+
+                                                        {/* Documents Section */}
+                                                        {familyDocs[f.id] && familyDocs[f.id].length > 0 && (
+                                                            <div className="mt-8 border-t-2 border-slate-100 pt-6">
+                                                                <h3 className="text-sm font-black text-slate-900 mb-5 uppercase tracking-widest flex items-center gap-2">
+                                                                    Uploaded Verification Documents
+                                                                </h3>
+                                                                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                                                                    {familyDocs[f.id].map(doc => {
+                                                                        const fileUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${doc.filePath}`;
+                                                                        return (
+                                                                            <a 
+                                                                                key={doc.id} 
+                                                                                href={fileUrl} 
+                                                                                target="_blank" 
+                                                                                rel="noreferrer"
+                                                                                className="group flex flex-col rounded-xl border-2 border-indigo-100 bg-indigo-50/30 p-4 transition-all hover:bg-indigo-50 hover:border-indigo-200"
+                                                                            >
+                                                                                <div className="mb-2 flex h-24 w-full items-center justify-center rounded-lg bg-slate-100 object-cover overflow-hidden">
+                                                                                    {doc.fileName.toLowerCase().endsWith('.pdf') ? (
+                                                                                        <span className="font-black text-slate-400 text-lg">PDF</span>
+                                                                                    ) : (
+                                                                                        <img src={fileUrl} alt={doc.fileName} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                                                                    )}
+                                                                                </div>
+                                                                                <p className="truncate text-xs font-bold text-indigo-900" title={doc.fileName}>{doc.fileName}</p>
+                                                                                <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                                                                    {new Date(doc.uploadedAt).toLocaleDateString()}
+                                                                                </p>
+                                                                            </a>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>

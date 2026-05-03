@@ -9,6 +9,7 @@ router.post('/start', claimController.startClaim);
 router.post('/upload-document', upload.single('file'), claimController.uploadDocument);
 router.post('/pre-verify', claimController.preVerifyClaim);
 router.post('/submit', claimController.submitClaim);
+router.post('/kyc-submit', claimController.kycSubmitClaim);
 router.get('/timeline/:claimId', claimController.getClaimTimeline);
 
 export default router;

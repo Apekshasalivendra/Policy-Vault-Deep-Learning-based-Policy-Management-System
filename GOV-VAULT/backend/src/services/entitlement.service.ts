@@ -236,3 +236,28 @@ export const markMemberDeceased = async (userId: string, memberId: string) => {
         handleProxyError(error);
     }
 };
+
+export const kycSubmitClaim = async (userId: string, userRole: string, claimId: string, kycMethod: string, claimType: string) => {
+    await verifyClaimOwnership(userId, claimId);
+
+    try {
+        const response = await entitlementProxy.post('/claims/kyc-submit', {
+            claimId, kycMethod, claimType
+        }, {
+            headers: {
+                'x-user-id': userId,
+                'x-user-role': userRole
+            }
+        });
+
+        // Update local claim stub to SUBMITTED so it appears in admin queue
+        await prisma.claim.update({
+            where: { id: claimId },
+            data: { status: 'PENDING' } // PENDING in backend = waiting admin
+        }).catch(() => {}); // ignore if local stub doesn't exist
+
+        return response.data;
+    } catch (error) {
+        handleProxyError(error);
+    }
+};

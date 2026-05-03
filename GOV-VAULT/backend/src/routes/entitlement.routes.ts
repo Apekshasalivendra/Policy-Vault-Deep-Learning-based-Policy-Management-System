@@ -13,6 +13,7 @@ router.post('/claims/start', entitlementController.startClaim);
 router.post('/claims/upload-document', upload.single('file'), entitlementController.uploadDocument);
 router.post('/claims/pre-verify', entitlementController.preVerifyClaim);
 router.post('/claims/submit', entitlementController.submitClaim);
+router.post('/claims/kyc-submit', entitlementController.kycSubmitClaim);
 router.get('/claims/timeline/:claimId', entitlementController.getClaimTimeline);
 router.post('/members/:memberId/deceased', entitlementController.markDeceased);
 

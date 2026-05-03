@@ -25,10 +25,35 @@ export default function UploadDocumentsPage() {
     const handleUpload = async () => {
         if (files.length === 0) return;
         setUploading(true);
-        // Simulate upload delay
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        setUploading(false);
-        setSuccess(true);
+
+        try {
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            // Use the same origin as the configured API (port 3000 for backend)
+            const apiBase = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000' 
+                : `${window.location.protocol}//${window.location.hostname}:3000`;
+
+            const response = await fetch(`${apiBase}/api/families/${familyId}/documents`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.error || `Upload failed with status ${response.status}`);
+            }
+
+            setSuccess(true);
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            alert(`Failed to upload documents: ${error.message}`);
+        } finally {
+            setUploading(false);
+        }
     };
 
     if (success) {

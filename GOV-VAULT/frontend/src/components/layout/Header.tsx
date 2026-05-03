@@ -19,18 +19,18 @@ export default function Header() {
     };
 
     const userLinks = [
-        { href: '/dashboard',          icon: <LayoutDashboard size={15} />, label: 'Dashboard' },
-        { href: '/apply',              icon: <Users size={15} />,           label: 'Apply'     },
-        { href: '/recommendations',    icon: <Sparkles size={15} />,        label: 'Schemes'   },
-        { href: '/dashboard/policies', icon: <BookOpen size={15} />,        label: 'Policies'  },
-        { href: '/claims',             icon: <FileText size={15} />,        label: 'Claims'    },
+        { href: '/dashboard',       icon: <LayoutDashboard size={15} />, label: 'Dashboard' },
+        { href: '/apply',           icon: <Users size={15} />,           label: 'Apply'     },
+        { href: '/recommendations', icon: <Sparkles size={15} />,        label: 'Schemes'   },
+        { href: '/policies',        icon: <BookOpen size={15} />,        label: 'Policies'  },
+        { href: '/claims',          icon: <FileText size={15} />,        label: 'Claims'    },
     ];
 
     const adminLinks = [
-        { href: '/admin',          icon: <LayoutDashboard size={15} />, label: 'Dashboard' },
-        { href: '/admin/families', icon: <Users size={15} />,           label: 'Families'  },
-        { href: '/admin/claims',   icon: <Activity size={15} />,        label: 'Claims'    },
-        { href: '/admin/audit',    icon: <FileText size={15} />,        label: 'Audit'     },
+        { href: '/admin',                icon: <LayoutDashboard size={15} />, label: 'Dashboard'        },
+        { href: '/admin/families',       icon: <Users size={15} />,           label: 'Family Approvals' },
+        { href: '/admin/claims',         icon: <Activity size={15} />,        label: 'Scheme Approvals' },
+        { href: '/admin/policies',       icon: <BookOpen size={15} />,        label: 'Policy Approvals' },
     ];
 
     const links = role === 'ADMIN' ? adminLinks : userLinks;

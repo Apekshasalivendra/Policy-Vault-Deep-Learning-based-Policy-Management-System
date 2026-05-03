@@ -8,7 +8,7 @@ import {
     Camera, UploadCloud, FileCheck
 } from 'lucide-react';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { familyApi } from '@/lib/api';
+import { familyApi, claimApi, entitlementApi } from '@/lib/api';
 
 declare global {
     interface Window {
@@ -19,7 +19,7 @@ declare global {
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface FamilyMember {
     id: string;
-    name: string;
+    nameAsInAadhaar: string;
     age: number;
     occupation: string;
     incomeRange: string;
@@ -55,8 +55,8 @@ function generateMockPolicies(members: FamilyMember[]): MockPolicy[] {
         policyName: 'Jeevan Anand (Endowment)',
         policyType: 'LIFE_INSURANCE',
         issuingAuthority: 'Life Insurance Corporation of India (LIC)',
-        policyHolder: head.name,
-        nominee: spouseOrChild.name,
+        policyHolder: head.nameAsInAadhaar,
+        nominee: spouseOrChild.nameAsInAadhaar,
         status: 'ACTIVE'
     });
 
@@ -66,8 +66,8 @@ function generateMockPolicies(members: FamilyMember[]): MockPolicy[] {
             policyName: 'YSR Bima Scheme',
             policyType: 'LIFE_INSURANCE',
             issuingAuthority: 'Government of Andhra Pradesh',
-            policyHolder: spouseOrChild.name,
-            nominee: head.name,
+            policyHolder: spouseOrChild.nameAsInAadhaar,
+            nominee: head.nameAsInAadhaar,
             status: 'ACTIVE'
         });
     }
@@ -77,8 +77,8 @@ function generateMockPolicies(members: FamilyMember[]): MockPolicy[] {
         policyName: 'Employee Pension Scheme (EPS)',
         policyType: 'PENSION',
         issuingAuthority: 'EPFO India',
-        policyHolder: head.name,
-        nominee: third.name,
+        policyHolder: head.nameAsInAadhaar,
+        nominee: third.nameAsInAadhaar,
         status: 'ACTIVE'
     });
 
@@ -88,8 +88,8 @@ function generateMockPolicies(members: FamilyMember[]): MockPolicy[] {
             policyName: 'Pradhan Mantri Jeevan Jyoti Bima Yojana',
             policyType: 'LIFE_INSURANCE',
             issuingAuthority: 'Union Government of India',
-            policyHolder: third.name,
-            nominee: head.name,
+            policyHolder: third.nameAsInAadhaar,
+            nominee: head.nameAsInAadhaar,
             status: 'ACTIVE'
         });
     }
@@ -164,6 +164,7 @@ function ClaimModal({
     const [fileUploaded, setFileUploaded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [verificationMethod, setVerificationMethod] = useState<'RAZORPAY' | 'MANUAL'>('RAZORPAY');
+    const [activatedClaimId, setActivatedClaimId] = useState<string | null>(null);
 
     const isDependent = policy.nominee === currentUser;
 
@@ -192,11 +193,21 @@ function ClaimModal({
                 }
                 const options = {
                     key: 'rzp_test_ScHtzspSTvvi1X',
-                    amount: '100', // 1 INR in paise
+                    amount: '100',
                     currency: 'INR',
                     name: 'GOV-VAULT KYC',
                     description: 'Penny Drop Bank Verification',
-                    handler: function (response: any) {
+                    handler: async function (response: any) {
+                        // KYC complete — submit claim to admin queue
+                        if (activatedClaimId) {
+                            try {
+                                await entitlementApi.kycSubmitClaim(
+                                    activatedClaimId,
+                                    'RAZORPAY',
+                                    claimType || 'MATURITY'
+                                );
+                            } catch (e) { console.error('kycSubmit failed', e); }
+                        }
                         setLoading(false);
                         setStep(4);
                         setTimeout(onSuccess, 2000);
@@ -215,8 +226,17 @@ function ClaimModal({
                 const rzp = new window.Razorpay(options);
                 rzp.open();
             } else {
-                // Manual Upload
-                setTimeout(() => {
+                // Manual Upload path
+                setTimeout(async () => {
+                    if (activatedClaimId) {
+                        try {
+                            await entitlementApi.kycSubmitClaim(
+                                activatedClaimId,
+                                'MANUAL',
+                                claimType || 'MATURITY'
+                            );
+                        } catch (e) { console.error('kycSubmit failed', e); }
+                    }
                     setLoading(false);
                     setStep(4);
                     setTimeout(onSuccess, 2000);
@@ -424,22 +444,54 @@ function PoliciesContent() {
 
     // Initial Fetch
     useEffect(() => {
-        familyApi.getMyFamily()
-            .then((r) => {
-                const family = (r.data as any).family;
+        Promise.all([
+            familyApi.getMyFamily(),
+            claimApi.getMyClaims().catch(() => ({ data: { claims: [] } }))
+        ])
+            .then(([familyRes, claimsRes]) => {
+                const family = (familyRes.data as any).family;
+                const claims = (claimsRes.data as any).claims || [];
+                
                 if (family?.members) {
                     setMembers(family.members);
-                    setMockPolicies(generateMockPolicies(family.members));
+                    const mocks = generateMockPolicies(family.members);
+                    
+                    // Cross-reference existing claims to disable 'Initiate Claim' buttons
+                    const claimedSchemeIds = new Set(claims.map((c: any) => c.schemeId));
+                    const updatedMocks = mocks.map(m => claimedSchemeIds.has(m.id) ? { ...m, status: 'CLAIMED' } : m);
+                    
+                    setMockPolicies(updatedMocks as any);
                 }
             })
             .catch(() => setError('Could not load family vault data.'))
             .finally(() => setLoading(false));
     }, []);
 
-    const currentUser = members[0]?.name || 'Unknown User';
+    const currentUser = members[0]?.nameAsInAadhaar || 'Unknown User';
 
-    const handleClaimSuccess = () => {
+    const handleClaimSuccess = async () => {
         if (!activePolicy) return;
+        
+        try {
+            // Find the actual member ID by matching the policy holder's name
+            const owner = members.find(m => m.nameAsInAadhaar === activePolicy.policyHolder);
+            if (owner) {
+                // Call Entitlement API to create a StructuredClaim
+                const startRes = await entitlementApi.startClaim(owner.id, activePolicy.id, owner.nameAsInAadhaar);
+                const claimId = startRes.data.claimId;
+                
+                if (claimId) {
+                    // Immediately submit to admin queue (KYC was done via Razorpay/manual in modal)
+                    await entitlementApi.kycSubmitClaim(claimId, 'RAZORPAY', 'MATURITY').catch(() => {});
+                }
+            }
+        } catch (e: any) {
+            console.error("Failed to sync claim to backend", e);
+            if (!e.response?.data?.error?.includes('exists')) {
+                // Claim may already exist — that's fine
+            }
+        }
+
         // Update local mock state immediately
         setMockPolicies(prev => prev.map(p => 
             p.id === activePolicy.id ? { ...p, status: 'CLAIMED' } : p

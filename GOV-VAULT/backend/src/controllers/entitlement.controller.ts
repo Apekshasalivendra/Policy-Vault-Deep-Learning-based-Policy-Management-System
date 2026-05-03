@@ -150,3 +150,22 @@ export const markDeceased = async (req: Request, res: Response): Promise<void> =
         res.status(Number(status) || 500).json({ error: message || err.message });
     }
 };
+
+export const kycSubmitClaim = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const userRole = req.user!.role;
+        const { claimId, kycMethod, claimType } = req.body;
+
+        if (!claimId) {
+            res.status(400).json({ error: 'claimId is required' });
+            return;
+        }
+
+        const data = await entitlementService.kycSubmitClaim(userId, userRole, claimId, kycMethod || 'RAZORPAY', claimType || 'MATURITY');
+        res.status(200).json(data);
+    } catch (err: any) {
+        const [status, message] = err.message.split(':');
+        res.status(Number(status) || 500).json({ error: message || err.message });
+    }
+};

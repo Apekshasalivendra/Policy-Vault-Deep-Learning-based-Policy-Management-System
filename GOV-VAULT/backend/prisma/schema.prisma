@@ -42,9 +42,21 @@ model Family {
   claims             Claim[]
   createdBy          User                @relation(fields: [createdById], references: [id], onDelete: Cascade)
   members            FamilyMember[]
+  documents          FamilyDocument[]
   recommendationLogs RecommendationLog[]
 
   @@map("families")
+}
+
+model FamilyDocument {
+  id         String   @id @default(uuid())
+  familyId   String
+  fileName   String
+  filePath   String
+  uploadedAt DateTime @default(now())
+  family     Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@map("family_documents")
 }
 
 model FamilyMember {
@@ -78,6 +90,8 @@ model Claim {
   familyId  String
   memberId  String
   schemeId  String
+  category  ClaimCategory @default(SCHEME)
+  metadata  Json?
   status    ClaimStatus  @default(PENDING)
   source    ClaimSource  @default(MANUAL)
   createdAt DateTime     @default(now())
@@ -129,6 +143,11 @@ enum FamilyStatus {
   REJECTED
 }
 
+enum ClaimCategory {
+  SCHEME
+  POLICY
+}
+
 enum ClaimStatus {
   PENDING
   INITIATED
@@ -150,4 +169,53 @@ enum NotificationType {
   CLAIM_APPROVED
   CLAIM_REJECTED
   CLAIM_SETTLED
+}
+
+model Orphan {
+  id                 String              @id @default(uuid())
+  tempId             String              @unique
+  permanentId        String?             @unique
+  name               String
+  fatherName         String
+  motherName         String
+  guardianName       String?
+  currentAddress     String
+  aadhaarNumber      String?
+  biometricsTaken    Boolean             @default(false)
+  policeVerification VerificationStatus  @default(PENDING)
+  createdAt          DateTime            @default(now())
+  trustFund          TrustFund?
+
+  @@map("orphans")
+}
+
+model TrustFund {
+  id          String   @id @default(uuid())
+  orphanId    String   @unique
+  totalAmount Float
+  balance     Float
+  createdAt   DateTime @default(now())
+  orphan      Orphan   @relation(fields: [orphanId], references: [id], onDelete: Cascade)
+  transactions FundTransaction[]
+
+  @@map("trust_funds")
+}
+
+model FundTransaction {
+  id          String   @id @default(uuid())
+  fundId      String
+  amount      Float
+  purpose     String
+  toWhom      String
+  proofDocUrl String?
+  createdAt   DateTime @default(now())
+  fund        TrustFund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@map("fund_transactions")
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }

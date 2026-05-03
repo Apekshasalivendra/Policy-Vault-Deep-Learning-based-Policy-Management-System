@@ -20,7 +20,7 @@ declare global {
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface FamilyMember {
     id: string;
-    name: string;
+    nameAsInAadhaar: string;
     age: number;
     occupation: string;
     incomeRange: string;
@@ -367,7 +367,7 @@ function ClaimContent() {
                                             <option value="" className="bg-white text-slate-400 font-medium">— Choose a member —</option>
                                             {pageState.family.members.map((m) => (
                                                 <option key={m.id} value={m.id} className="bg-white font-medium">
-                                                    {m.name} — Age {m.age} · {m.occupation}
+                                                    {m.nameAsInAadhaar} — Age {m.age} · {m.occupation}
                                                 </option>
                                             ))}
                                         </select>
@@ -380,10 +380,10 @@ function ClaimContent() {
                                         return m ? (
                                             <div className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 flex items-center gap-3 text-sm shadow-sm">
                                                 <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-[var(--gov-blue)] font-bold text-sm">
-                                                    {m.name[0]}
+                                                    {(m.nameAsInAadhaar || 'M')[0].toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-slate-900 leading-none">{m.name}</p>
+                                                    <p className="font-bold text-slate-900 leading-none">{m.nameAsInAadhaar}</p>
                                                     <p className="text-xs font-medium text-slate-500 mt-1">{m.incomeRange} · {m.occupation}</p>
                                                 </div>
                                             </div>

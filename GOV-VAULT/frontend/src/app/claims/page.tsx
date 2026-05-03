@@ -163,9 +163,9 @@ function ClaimsContent() {
                                         <td className="px-6 py-6 text-right">
                                             <Link
                                                 href={`/claim/${c.id}`}
-                                                className="inline-flex items-center text-xs font-black text-[var(--gov-blue)] hover:underline uppercase tracking-widest"
+                                                className="group inline-flex items-center gap-1.5 rounded-xl bg-slate-50 border-2 border-slate-200 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-700 hover:border-[var(--gov-blue)] hover:text-[var(--gov-blue)] transition-all"
                                             >
-                                                Details <ChevronRight className="h-4 w-4 ml-1" />
+                                                Details <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                                             </Link>
                                         </td>
                                     </tr>

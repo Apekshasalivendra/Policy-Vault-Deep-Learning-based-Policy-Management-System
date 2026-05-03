@@ -11,7 +11,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { familyApi, claimApi } from '@/lib/api';
 
 interface FamilyMember {
-    id: string; name: string; phone: string; age: number;
+    id: string; nameAsInAadhaar: string; phoneAsInAadhaar: string; age: number;
     occupation: string; incomeRange: string; pan: string | null;
     isAadhaarVerified: boolean;
 }
@@ -24,7 +24,7 @@ interface Claim {
     id: string; schemeId: string;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
     source: 'AI_RECOMMENDED' | 'MANUAL'; createdAt: string;
-    member: { id: string; name: string; age: number; occupation: string };
+    member: { id: string; nameAsInAadhaar: string; age: number; occupation: string };
     family: { id: string; temporaryFamilyId: string; status: string };
 }
 
@@ -213,7 +213,7 @@ function DashboardContent() {
                                         <tbody>
                                             {family.members.map(m => (
                                                 <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="font-black text-slate-900">{m.name}</td>
+                                                    <td className="font-black text-slate-900">{m.nameAsInAadhaar}</td>
                                                     <td className="font-bold text-slate-700">{m.age}</td>
                                                     <td className="font-bold text-slate-700">{m.occupation}</td>
                                                     <td className="font-bold text-slate-700">{m.incomeRange}</td>
@@ -237,8 +237,8 @@ function DashboardContent() {
                             icon={<FileText size={22} />}
                             title="Active Welfare Claims"
                             action={
-                                <Link href="/claim" className="btn-secondary text-sm py-2.5 px-5 font-black border-2 shadow-sm">
-                                    <PlusCircle size={16} /> NEW CLAIM
+                                <Link href="/recommendations" className="btn-secondary text-sm py-2.5 px-5 font-black border-2 shadow-sm text-amber-600 border-amber-200 hover:bg-amber-50">
+                                    <Sparkles size={16} className="text-amber-500" /> DISCOVER SCHEMES
                                 </Link>
                             }>
                             {claimsLoading ? (
@@ -270,7 +270,7 @@ function DashboardContent() {
                                         <tbody>
                                             {claims.map(c => (
                                                 <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="font-black text-slate-900">{c.member.name}</td>
+                                                    <td className="font-black text-slate-900">{c.member.nameAsInAadhaar}</td>
                                                     <td className="font-mono text-xs font-bold text-slate-500 tracking-tighter">{c.schemeId}</td>
                                                     <td>
                                                         <span className={`badge py-1 px-2.5 ${c.source === 'AI_RECOMMENDED' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
@@ -299,7 +299,7 @@ function DashboardContent() {
                         {/* Quick Action Cards */}
                         <div className="grid gap-6 sm:grid-cols-2">
                             {/* Policy Vault */}
-                            <div className="card-elevated p-7 flex items-center justify-between bg-white border-2 border-slate-100"
+                            <div className="card-elevated p-7 flex items-center justify-between bg-white border-2 border-slate-100 sm:col-span-2 md:col-span-1"
                                 style={{ borderLeft: '6px solid var(--gov-blue)' }}>
                                 <div className="flex items-center gap-5">
                                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 border border-blue-100 text-[var(--gov-blue)] shadow-sm">
@@ -315,27 +315,6 @@ function DashboardContent() {
                                 <Link href="/dashboard/policies" className="btn-primary px-6 py-3 shadow-xl shadow-blue-100">
                                     OPEN <ChevronRight size={18} />
                                 </Link>
-                            </div>
-
-                            {/* AI Schemes */}
-                            <div className="card-elevated p-7 flex items-center justify-between bg-white border-2 border-slate-100"
-                                style={{ borderLeft: '6px solid var(--gov-gold)' }}>
-                                <div className="flex items-center gap-5">
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 border border-amber-100 text-amber-700 shadow-sm">
-                                        <Sparkles size={28} />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-black text-xl tracking-tight" style={{ color: 'var(--gov-blue)' }}>AI Schemes</h3>
-                                        <p className="text-sm font-bold mt-0.5 text-slate-700">
-                                            Tailored Welfare Matching
-                                        </p>
-                                    </div>
-                                </div>
-                                <button onClick={() => router.push('/recommendations')}
-                                    className="px-6 py-3 font-black text-sm rounded-xl transition-all shadow-xl shadow-amber-100"
-                                    style={{ background: 'var(--gov-gold)', color: 'var(--gov-blue)' }}>
-                                    DISCOVER <ChevronRight size={18} style={{ display: 'inline' }} />
-                                </button>
                             </div>
                         </div>
                     </>

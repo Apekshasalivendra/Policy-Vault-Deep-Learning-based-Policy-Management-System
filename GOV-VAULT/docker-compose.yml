@@ -34,11 +34,10 @@ services:
       SCHEME_SAATHI_PATH: /scheme_saathi
       DB_PATH: /scheme_saathi/new_schemes.db
     volumes:
-      # Mount Scheme_Saathi directory as read-only inside the container
+      # Mount Scheme_Saathi directory inside the container
       - type: bind
         source: ${SCHEME_SAATHI_DIR:-../Scheme_Saathi}
         target: /scheme_saathi
-        read_only: true
     ports:
       - "8000:8000"
     healthcheck:
@@ -91,6 +90,8 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       # Internal Docker DNS — http://scheme-ai-service:8000 (NOT localhost)
       AI_SERVICE_URL: http://scheme-ai-service:8000
+      ENTITLEMENT_SERVICE_URL: http://entitlement-service:4000
+      FRONTEND_URL: http://localhost:3001
     ports:
       - "3000:3000"
     healthcheck:

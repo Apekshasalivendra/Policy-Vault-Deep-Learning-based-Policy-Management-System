@@ -116,3 +116,26 @@ export const rejectClaim = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
+// ── GET /admin/policy-claims ──────────────────────────────────────────────────
+export const getPendingPolicyClaims = async (_req: Request, res: Response): Promise<void> => {
+    try {
+        const claims = await adminService.listPendingPolicyClaims();
+        res.json({ count: claims.length, claims });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to list policy claims';
+        res.status(500).json({ error: message });
+    }
+};
+
+// ── POST /admin/policy-claim/:id/request-docs ─────────────────────────────────
+export const requestPolicyDocsHandler = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user!.userId;
+        const claim = await adminService.requestPolicyDocs(adminId, id);
+        res.json({ message: 'Document request email sent to user', claim });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to request documents';
+        res.status(400).json({ error: message });
+    }
+};

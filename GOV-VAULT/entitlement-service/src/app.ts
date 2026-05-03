@@ -18,6 +18,7 @@ import adminRoutes from './routes/admin.routes';
 import memberRoutes from './routes/member.routes';
 
 // Routes
+app.use('/uploads', express.static('uploads'));
 app.use('/health', healthRoutes);
 app.use('/policies', policyRoutes);
 app.use('/claims', claimRoutes);

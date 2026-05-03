@@ -78,3 +78,34 @@ export const getMyFamily = async (req: Request, res: Response): Promise<void> =>
         res.status(404).json({ error: message });
     }
 };
+
+// ── PUT /family/update ──────────────────────────────────────────────────────────
+export const updateFamily = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { members, aadhaarVerificationToken } = req.body as {
+            members?: unknown[];
+            aadhaarVerificationToken?: string;
+        };
+
+        if (!Array.isArray(members) || members.length === 0) {
+            res.status(400).json({ error: 'members must be a non-empty array' });
+            return;
+        }
+
+        const userId = req.user!.userId;
+        const family = await familyService.updateFamily(
+            userId,
+            members as never,
+            aadhaarVerificationToken
+        );
+
+        res.status(200).json({ message: 'Family updated successfully', family });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Family update failed';
+        if (message.includes('already registered') || message.includes('Duplicate')) {
+            res.status(409).json({ error: message });
+            return;
+        }
+        res.status(400).json({ error: message });
+    }
+};

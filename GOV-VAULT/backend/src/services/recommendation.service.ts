@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { logRecommendation } from './recommendationLog.service';
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-const AI_TIMEOUT_MS = 60000; // 60s — Groq LLM inference / Pinecone can take longer on cold starts
+const AI_TIMEOUT_MS = 120000; // 120s — Groq LLM inference / Pinecone / SentenceTransformer cold starts
 
 export interface SchemeRecommendation {
     schemeId: string;
@@ -20,6 +20,7 @@ export interface RecommendationPayload {
     age: number;
     gender: string;
     category: string;
+    religion?: string;
     familySize: number;
 }
 
@@ -64,7 +65,7 @@ export const getRecommendations = async (
 
         // Structured logging per error type — never silent
         if (axiosErr.code === 'ECONNABORTED') {
-            console.error('[recommendation.service] AI service timeout after 5s:', axiosErr.message);
+            console.error('[recommendation.service] AI service timeout after 120s:', axiosErr.message);
         } else if (axiosErr.code === 'ECONNREFUSED') {
             console.error('[recommendation.service] AI service unreachable (ECONNREFUSED):', axiosErr.message);
         } else {

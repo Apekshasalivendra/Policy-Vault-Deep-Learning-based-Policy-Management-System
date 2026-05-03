@@ -88,3 +88,17 @@ export const getClaimTimeline = async (req: Request, res: Response): Promise<voi
         res.status(404).json({ error: error.message });
     }
 };
+export const kycSubmitClaim = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { claimId, kycMethod, claimType } = req.body;
+        if (!claimId) {
+            res.status(400).json({ error: "claimId is required" });
+            return;
+        }
+        const result = await claimService.kycSubmitLogic(claimId, kycMethod || 'RAZORPAY', claimType || 'MATURITY');
+        res.status(200).json(result);
+    } catch (error: any) {
+        console.error("[ClaimController] kycSubmit error:", error.message);
+        res.status(400).json({ error: error.message });
+    }
+};

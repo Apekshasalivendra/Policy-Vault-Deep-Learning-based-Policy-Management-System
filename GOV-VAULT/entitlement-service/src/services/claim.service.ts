@@ -281,3 +281,44 @@ export const getTimelineLogic = async (claimId: string) => {
 
     return claim.timeline;
 };
+
+export const kycSubmitLogic = async (claimId: string, kycMethod: string, claimType: string) => {
+    const claim = await prisma.structuredClaim.findUnique({ where: { id: claimId } });
+    if (!claim) throw new Error("Claim not found");
+
+    if (claim.isClosed) throw new Error("Claim is already closed.");
+
+    // If already submitted or further, just return current state
+    if (['SUBMITTED', 'UNDER_ADMIN_REVIEW', 'APPROVED', 'REJECTED', 'SETTLED'].includes(claim.status)) {
+        return { claimId, status: claim.status, message: "Claim already in admin queue" };
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+        // Update claim to SUBMITTED with preVerify marked CLEAN (KYC acts as verification)
+        const updatedClaim = await tx.structuredClaim.update({
+            where: { id: claimId },
+            data: {
+                status: ClaimStatus.SUBMITTED,
+                preVerifyResult: PreVerifyStatus.CLEAN,
+            }
+        });
+
+        const seq2 = await getNextSequence(claimId);
+        await tx.claimTimeline.create({
+            data: {
+                claimId,
+                status: ClaimStatus.SUBMITTED,
+                sequence: seq2,
+                note: `KYC completed via ${kycMethod}. Claim type: ${claimType}. Submitted to admin review queue.`
+            }
+        });
+
+        return updatedClaim;
+    });
+
+    return {
+        claimId: result.id,
+        status: result.status,
+        message: "Claim submitted to Admin review queue"
+    };
+};

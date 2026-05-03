@@ -3,7 +3,7 @@ const TOKEN_KEY = 'govvault_token';
 
 export const getToken = (): string | null => {
     if (typeof window === 'undefined') return null;
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = sessionStorage.getItem(TOKEN_KEY);
     if (!token) return null;
 
     // Validate token hasn't expired (client-side check)
@@ -11,11 +11,11 @@ export const getToken = (): string | null => {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const expiry = payload.exp * 1000; // JWT exp is in seconds
         if (Date.now() >= expiry) {
-            localStorage.removeItem(TOKEN_KEY); // Auto-clear expired token
+            sessionStorage.removeItem(TOKEN_KEY); // Auto-clear expired token
             return null;
         }
     } catch {
-        localStorage.removeItem(TOKEN_KEY); // Invalid token structure
+        sessionStorage.removeItem(TOKEN_KEY); // Invalid token structure
         return null;
     }
 
@@ -23,11 +23,11 @@ export const getToken = (): string | null => {
 };
 
 export const setToken = (token: string): void => {
-    localStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.setItem(TOKEN_KEY, token);
 };
 
 export const removeToken = (): void => {
-    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
 };
 
 // Decode JWT payload without verifying signature (client-side display only)

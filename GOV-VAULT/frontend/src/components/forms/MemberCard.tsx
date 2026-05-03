@@ -55,12 +55,13 @@ interface MemberCardProps {
     member: MemberState;
     isHead: boolean;       // first member = head of family
     canRemove: boolean;
+    isReadOnly?: boolean;  // true for existing members in update mode
     onChange: (updated: MemberState) => void;
     onRemove: () => void;
 }
 
-export default function MemberCard({ index, member, isHead, canRemove, onChange, onRemove }: MemberCardProps) {
-    const [expanded, setExpanded] = useState(true);
+export default function MemberCard({ index, member, isHead, canRemove, isReadOnly, onChange, onRemove }: MemberCardProps) {
+    const [expanded, setExpanded] = useState(!isReadOnly); // collapse existing members by default
 
     const update = (field: keyof MemberData, value: string) =>
         onChange({ ...member, data: { ...member.data, [field]: value } });
@@ -111,6 +112,7 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             className={`rounded-2xl overflow-hidden border transition-all shadow-sm ${
+                isReadOnly ? 'bg-blue-50 border-blue-200' :
                 verified ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'
             }`}
         >
@@ -131,8 +133,8 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                             {member.data.nameAsInAadhaar || `Member ${index + 1}`}
                             {isHead && <span className="ml-2 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">(HEAD)</span>}
                         </p>
-                        <p className="text-[11px] font-bold mt-0.5" style={{ color: verified ? 'var(--success)' : 'var(--text-muted)' }}>
-                            {verified ? '✓ Aadhaar Verified' : '⚠ Aadhaar verification required'}
+                        <p className="text-[11px] font-bold mt-0.5" style={{ color: isReadOnly ? '#1d4ed8' : verified ? 'var(--success)' : 'var(--text-muted)' }}>
+                            {isReadOnly ? '🔒 Registered Member (Read-only)' : verified ? '✓ Aadhaar Verified' : '⚠ Aadhaar verification required'}
                         </p>
                     </div>
                 </div>
@@ -160,6 +162,24 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                         transition={{ duration: 0.2 }}
                         className="border-t border-slate-100"
                     >
+                        {isReadOnly ? (
+                            /* Read-only summary for existing members */
+                            <div className="grid gap-3 p-5 sm:grid-cols-2">
+                                {[
+                                    { label: 'Name', value: member.data.nameAsInAadhaar },
+                                    { label: 'Age', value: member.data.age },
+                                    { label: 'Gender', value: member.data.gender },
+                                    { label: 'Religion', value: member.data.religion },
+                                    { label: 'Occupation', value: member.data.occupation },
+                                    { label: 'Income Range', value: member.data.incomeRange },
+                                ].map(({ label, value }) => (
+                                    <div key={label} className="rounded-xl bg-blue-50/50 border border-blue-100 p-3">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-0.5">{label}</p>
+                                        <p className="text-sm font-bold text-slate-800">{value || '—'}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
                         <div className="grid gap-4 p-5 sm:grid-cols-2">
                             {/* Name */}
                             <InputField icon={<User className="h-4 w-4" />} label="Name as in Aadhaar" required>
@@ -329,6 +349,7 @@ export default function MemberCard({ index, member, isHead, canRemove, onChange,
                                 )}
                             </InputField>
                         </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
